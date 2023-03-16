@@ -1,0 +1,16 @@
+{
+  "name": "tradingstats",
+  "version": "1.0.0",
+  "description": "backend for trading stats project",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tomeu",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "mysql": "^2.18.1"
+  }
+}
