@@ -23,3 +23,11 @@ mysqlConnection.connect((err) => {
 //PORT ENVIRONMENT VARIABLE
 const port = process.env.PORT || 8080;
 app.listen(port, () => console.log(`Listening on port ${port}..`));
+
+//Creating GET Router to fetch all the learner details from the MySQL Database
+app.get("/projections", (req, res) => {
+  mysqlConnection.query("SELECT * FROM projection", (err, rows, fields) => {
+    if (!err) res.send(rows);
+    else console.log(err);
+  });
+});
