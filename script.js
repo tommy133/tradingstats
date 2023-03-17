@@ -1,9 +1,11 @@
 const mysql = require("mysql");
 const express = require("express");
 const bodyparser = require("body-parser");
+var cors = require("cors");
 var app = express();
 //Configuring express server
 app.use(bodyparser.json());
+app.use(cors());
 
 //MySQL details
 var mysqlConnection = mysql.createConnection({
