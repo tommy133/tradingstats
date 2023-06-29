@@ -1,4 +1,4 @@
-require("config/db.js")
+require("./config/db.js")
 
 const app = require("express")();
 const bodyparser = require("body-parser");
