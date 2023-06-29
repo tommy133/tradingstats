@@ -79,4 +79,6 @@ mysqlConnection.query(sql, [req.params.id], (err, result) => {
     }
 });
 });
+
+module.exports = router;
   
