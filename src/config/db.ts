@@ -1,6 +1,6 @@
 //database connection
 
-const mysql = require("mysql");
+import mysql from 'mysql';
 
 let mysqlConnection = mysql.createConnection({
     host: "localhost",
@@ -10,9 +10,9 @@ let mysqlConnection = mysql.createConnection({
     multipleStatements: true,
   });
   
-  mysqlConnection.connect((err) => {
+  mysqlConnection.connect((err: any) => {
     if (!err) console.log("Connection Established Successfully");
     else console.log("Connection Failed!" + JSON.stringify(err, undefined, 2));
   });
 
-module.exports = mysqlConnection;
+  export default mysqlConnection;
