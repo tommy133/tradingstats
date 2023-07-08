@@ -6,7 +6,7 @@ const router: Router = express.Router();
 
 router.get('/', (req: Request, res: Response) => {
   mysqlConnection.query(
-    `SELECT symbol.name_sym, symbol.description, market.name_mkt FROM 
+    `SELECT symbol.id_sym, symbol.name_sym, symbol.description, market.name_mkt FROM 
     symbol JOIN market ON symbol.id_mkt = market.id_mkt;`,
     (err: Error, rows: any[], fields: any) => {
       if (!err) res.send(rows);
@@ -17,7 +17,7 @@ router.get('/', (req: Request, res: Response) => {
 
 router.get('/:id', (req: Request, res: Response) => {
   mysqlConnection.query(
-    `SELECT symbol.name_sym, symbol.description, market.name_mkt FROM 
+    `SELECT symbol.id_sym, symbol.name_sym, symbol.description, market.name_mkt FROM 
     symbol JOIN market ON symbol.id_mkt = market.id_mkt
     WHERE id_sym = ?`,
     [req.params.id],
