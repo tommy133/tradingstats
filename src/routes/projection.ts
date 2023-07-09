@@ -6,7 +6,7 @@ const router: Router = express.Router();
 
 router.get('/', (req: Request, res: Response) => {
   mysqlConnection.query(
-    `SELECT symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.name_st
+    `SELECT projection.id_proj, symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.name_st
     FROM projection
     JOIN symbol ON projection.id_sym = symbol.id_sym
     JOIN status ON projection.id_st = status.id_st`,
@@ -19,7 +19,7 @@ router.get('/', (req: Request, res: Response) => {
 
 router.get('/:id', (req: Request, res: Response) => {
   mysqlConnection.query(
-    `SELECT symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.name_st
+    `SELECT projection.id_proj, symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.name_st
     FROM projection
     JOIN symbol ON projection.id_sym = symbol.id_sym
     JOIN status ON projection.id_st = status.id_st
@@ -44,7 +44,7 @@ router.post('/', (req: Request, res: Response) => {
         console.log(err);
         res.status(500).send('Error inserting projection record');
       } else {
-        res.send(`Projection record added with ID: ${result.insertId}`);
+        res.send(`${result.insertId}`);
       }
     }
   );
