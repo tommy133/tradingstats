@@ -67,7 +67,7 @@ router.put('/:id', (req: Request, res: Response) => {
       } else if (result.affectedRows === 0) {
         res.status(404).send('Projection record not found');
       } else {
-        res.send(`Projection record updated with ID: ${id}`);
+        res.send(`${id}`);
       }
     }
   );
@@ -83,7 +83,7 @@ router.delete('/:id', (req: Request, res: Response) => {
     } else if (result.affectedRows === 0) {
       res.status(404).send('Projection record not found');
     } else {
-      res.send(`Projection record deleted with ID: ${req.params.id}`);
+      res.send(`${req.params.id}`);
     }
   });
 });
