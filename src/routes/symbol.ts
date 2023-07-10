@@ -40,7 +40,7 @@ router.post('/', (req: Request, res: Response) => {
         console.log(err);
         res.status(500).send('Error inserting symbol record');
       } else {
-        res.send(`Symbol record added with ID: ${result.insertId}`);
+        res.send(`${result.insertId}`);
       }
     }
   );
