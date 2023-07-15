@@ -1,5 +1,6 @@
 import express, { Router } from 'express';
 import multer from 'multer';
+import path from 'path';
 
 const router: Router = express.Router();
 
@@ -15,7 +16,7 @@ let store = multer.diskStorage({
 
 let upload = multer({storage:store});
 
-router.post('/upload', upload.single('chart'), function(req,res){
+router.post('/upload', upload.single('chart'), (req,res) => {
     if (!req.file) {
         console.log("No file received");
         return res.send({
@@ -27,6 +28,11 @@ router.post('/upload', upload.single('chart'), function(req,res){
         success: true
     })
     }
+});
+
+router.post('/download', (req,res) => {
+    const filepath = path.join(__dirname,'uploads') +'/'+ req.body.filename;
+    res.sendFile(filepath);
 });
 
 export default router;
