@@ -4,11 +4,18 @@ import { MysqlError } from 'mysql';
 
 const router: Router = express.Router();
 
+export interface ProjectionComment {
+  id_pc?: number;
+  pcomment?: string;
+  id_proj: number;
+}
+
+
 router.get('/', (req: Request, res: Response) => {
   mysqlConnection.query(
     `SELECT * FROM pcomment`,
-    (err: Error, rows: any[], fields: any) => {
-      if (!err) res.send(rows);
+    (err: Error, rows: ProjectionComment[]) => {
+      if (!err) res.json(rows);
       else console.log(err);
     }
   );
@@ -17,10 +24,10 @@ router.get('/', (req: Request, res: Response) => {
 router.get('/:id', (req: Request, res: Response) => {
   mysqlConnection.query(
     `SELECT * FROM pcomment
-    WHERE id_pc = ?`,
+    WHERE id_proj = ?`,
     [req.params.id],
-    (err: MysqlError | null, rows: any[], fields: any) => {
-      if (!err) res.send(rows);
+    (err: MysqlError | null, rows: ProjectionComment[]) => {
+      if (!err) res.json(rows[0]);
       else console.log(err);
     }
   );
