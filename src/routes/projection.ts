@@ -4,14 +4,24 @@ import { MysqlError } from 'mysql';
 
 const router: Router = express.Router();
 
+export interface Projection {
+  id_proj: number;
+  name_sym: string;
+  updown: boolean;
+  date_proj?: Date;
+  graph?: string;
+  name_tf: string;
+  name_st: string;
+}
+
 router.get('/', (req: Request, res: Response) => {
   mysqlConnection.query(
     `SELECT projection.id_proj, symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.name_st
     FROM projection
     JOIN symbol ON projection.id_sym = symbol.id_sym
     JOIN status ON projection.id_st = status.id_st`,
-    (err: Error, rows: any[], fields: any) => {
-      if (!err) res.send(rows);
+    (err: Error, rows: Projection[]) => {
+      if (!err) res.json(rows);
       else console.log(err);
     }
   );
@@ -25,8 +35,8 @@ router.get('/:id', (req: Request, res: Response) => {
     JOIN status ON projection.id_st = status.id_st
     WHERE id_proj = ?`,
     [req.params.id],
-    (err: MysqlError | null, rows: any[], fields: any) => {
-      if (!err) res.send(rows);
+    (err: MysqlError | null, row: Projection[]) => {
+      if (!err) res.json(row[0]);
       else console.log(err);
     }
   );
