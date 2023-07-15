@@ -5,7 +5,7 @@ const router: Router = express.Router();
 
 let store = multer.diskStorage({
     destination:function(req,file,cb){
-        cb(null, './uploads');
+        cb(null, 'uploads');
     },
     filename:function(req,file,cb){
         cb(null, Date.now()+'.'+file.originalname);
@@ -13,16 +13,20 @@ let store = multer.diskStorage({
 });
 
 
-let upload = multer({storage:store}).single('file');
+let upload = multer({storage:store});
 
-router.post('/upload', function(req,res,next){
-    upload(req,res,function(err){
-        if(err){
-            return res.status(501).json({error:err});
-        }
-        //do all database record saving activity
-        return res.json({originalname:req?.file?.originalname, uploadname:req?.file?.filename});
-    });
+router.post('/upload', upload.single('chart'), function(req,res){
+    if (!req.file) {
+        console.log("No file received");
+        return res.send({
+          success: false
+        });  
+    } else {
+    console.log('file received');
+    return res.send({
+        success: true
+    })
+    }
 });
 
 export default router;
