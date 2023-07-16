@@ -4,17 +4,17 @@ import path from 'path';
 
 const router: Router = express.Router();
 
-let store = multer.diskStorage({
-    destination:function(req,file,cb){
+const store = multer.diskStorage({
+    destination: (req,file,cb) => {
         cb(null, 'uploads');
     },
-    filename:function(req,file,cb){
+    filename: (req,file,cb) => {
         cb(null, Date.now()+'.'+file.originalname);
     }
 });
 
 
-let upload = multer({storage:store});
+const upload = multer({storage:store});
 
 router.post('/upload', upload.single('chart'), (req,res) => {
     if (!req.file) {
@@ -31,7 +31,7 @@ router.post('/upload', upload.single('chart'), (req,res) => {
 });
 
 router.post('/download', (req,res) => {
-    const filepath = path.join(__dirname,'uploads') +'/'+ req.body.filename;
+    const filepath = path.join(__dirname,'../../uploads') +'/'+ req.body.filename;
     res.sendFile(filepath);
 });
 
