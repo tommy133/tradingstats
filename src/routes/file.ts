@@ -22,12 +22,12 @@ router.post('/upload', upload.single('chart'), (req,res) => {
         return res.send({
           success: false
         });  
-    } else {
-    console.log('file received');
+    } 
+    console.log('File received');
     return res.send({
+        filename: req.file.filename,
         success: true
-    })
-    }
+    })  
 });
 
 router.post('/download', (req,res) => {
