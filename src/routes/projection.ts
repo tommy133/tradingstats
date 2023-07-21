@@ -4,24 +4,55 @@ import { MysqlError } from 'mysql';
 
 const router: Router = express.Router();
 
-export interface Projection {
-  id_proj: number;
-  name_sym: string;
-  updown: boolean;
-  date_proj?: Date;
-  graph?: string;
-  name_tf: string;
-  name_st: string;
+interface Symbol {
+  id: number;
+  nameSymbol: string;
 }
+
+interface Status {
+  id: number;
+  nameStatus: string;
+}
+
+export interface Projection {
+  id: number;
+  symbol: Symbol;
+  updown: boolean;
+  date?: Date;
+  graph?: string;
+  timeframe: string;
+  status: Status;
+}
+
+const mapRowToProjection = (row: any): Projection => {
+  return {
+    id: row.id_proj,
+    symbol: {
+      id: row.id_sym,
+      nameSymbol: row.name_sym,
+    },
+    updown: row.updown,
+    date: row.date_proj,
+    graph: row.graph,
+    timeframe: row.name_tf,
+    status: {
+      id: row.id_st,
+      nameStatus: row.name_st,
+    },
+  };
+};
 
 router.get('/', (req: Request, res: Response) => {
   mysqlConnection.query(
-    `SELECT projection.id_proj, symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.name_st
+    `SELECT projection.id_proj, symbol.id_sym, symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.id_st, status.name_st
     FROM projection
     JOIN symbol ON projection.id_sym = symbol.id_sym
     JOIN status ON projection.id_st = status.id_st`,
-    (err: Error, rows: Projection[]) => {
-      if (!err) res.json(rows);
+    (err: Error, rows: any[]) => {
+      if (!err){
+        const projections: Projection[] = rows.map(mapRowToProjection);
+        res.json(projections);
+      }
       else console.log(err);
     }
   );
@@ -35,8 +66,11 @@ router.get('/:id', (req: Request, res: Response) => {
     JOIN status ON projection.id_st = status.id_st
     WHERE id_proj = ?`,
     [req.params.id],
-    (err: MysqlError | null, row: Projection[]) => {
-      if (!err) res.json(row[0]);
+    (err: MysqlError | null, rows: Projection[]) => {
+      if (!err) {
+        const projections: Projection[] = rows.map(mapRowToProjection);
+        res.json(projections[0]);
+      }
       else console.log(err);
     }
   );
