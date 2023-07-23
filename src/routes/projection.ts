@@ -60,7 +60,7 @@ router.get('/', (req: Request, res: Response) => {
 
 router.get('/:id', (req: Request, res: Response) => {
   mysqlConnection.query(
-    `SELECT projection.id_proj, symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.name_st
+    `SELECT projection.id_proj, symbol.id_sym, symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.id_st, status.name_st
     FROM projection
     JOIN symbol ON projection.id_sym = symbol.id_sym
     JOIN status ON projection.id_st = status.id_st
