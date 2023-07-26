@@ -6,7 +6,7 @@ const router: Router = express.Router();
 
 export interface ProjectionComment {
   id_pc?: number;
-  pcomment?: string;
+  pcomment: string;
   id_proj: number;
 }
 
@@ -43,7 +43,7 @@ router.post('/', (req: Request, res: Response) => {
     (err: MysqlError | null, result: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error inserting projection record');
+        res.status(500).send('Error inserting projection comment record');
       } else {
         res.send(`${result.insertId}`);
       }
@@ -62,9 +62,9 @@ router.put('/:id', (req: Request, res: Response) => {
     (err: MysqlError | null, result: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error updating projection record');
+        res.status(500).send('Error updating projection comment record');
       } else if (result.affectedRows === 0) {
-        res.status(404).send('Projection record not found');
+        res.status(404).send('Projection comment record not found');
       } else {
         res.send(`${id}`);
       }
@@ -74,13 +74,13 @@ router.put('/:id', (req: Request, res: Response) => {
 
 
 router.delete('/:id', (req: Request, res: Response) => {
-  const sql = 'DELETE FROM pcomment WHERE id_pc = ?';
+  const sql = 'DELETE FROM pcomment WHERE id_proj = ?';
   mysqlConnection.query(sql, [req.params.id], (err: MysqlError | null, result: any) => {
     if (err) {
       console.log(err);
-      res.status(500).send('Error deleting projection record');
+      res.status(500).send('Error deleting projection comment record');
     } else if (result.affectedRows === 0) {
-      res.status(404).send('Projection record not found');
+      res.status(404).send('Projection comment record not found');
     } else {
       res.send(`${req.params.id}`);
     }
