@@ -18,7 +18,7 @@ export interface Projection {
   id: number;
   symbol: Symbol;
   updown: boolean;
-  date?: Date;
+  date?: string;
   graph?: string;
   timeframe: string;
   status: Status;
@@ -48,7 +48,7 @@ router.get('/', (req: Request, res: Response) => {
     FROM projection
     JOIN symbol ON projection.id_sym = symbol.id_sym
     JOIN status ON projection.id_st = status.id_st`,
-    (err: Error, rows: any[]) => {
+    (err: Error, rows: Projection[]) => {
       if (!err){
         const projections: Projection[] = rows.map(mapRowToProjection);
         res.json(projections);
@@ -69,6 +69,14 @@ router.get('/:id', (req: Request, res: Response) => {
     (err: MysqlError | null, rows: Projection[]) => {
       if (!err) {
         const projections: Projection[] = rows.map(mapRowToProjection);
+        // Convert the date strings to Date objects in your local timezone
+        projections.forEach((projection) => {
+          if (projection.date) {
+            const utcDate = new Date(projection.date);
+            const localDate = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000);
+            projection.date = localDate.toISOString(); // Convert it back to ISO 8601 with local timezone
+          }
+        });
         res.json(projections[0]);
       }
       else console.log(err);
