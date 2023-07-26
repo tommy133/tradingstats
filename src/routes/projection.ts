@@ -127,17 +127,49 @@ router.put('/:id', (req: Request, res: Response) => {
 
 
 router.delete('/:id', (req: Request, res: Response) => {
-  const sql = 'DELETE FROM projection WHERE id_proj = ?';
-  mysqlConnection.query(sql, [req.params.id], (err: MysqlError | null, result: any) => {
+  const projectionId = req.params.id;
+  // Check if there are comments associated with the projection
+  const checkCommentsSql = 'SELECT * FROM pcomment WHERE id_proj = ?';
+  mysqlConnection.query(checkCommentsSql, [projectionId], (err: MysqlError | null, comments: any[]) => {
     if (err) {
       console.log(err);
-      res.status(500).send('Error deleting projection record');
-    } else if (result.affectedRows === 0) {
-      res.status(404).send('Projection record not found');
+      res.status(500).send('Error checking associated comments');
+      return;
+    }
+
+    // If there are comments associated, delete them first
+    if (comments.length > 0) {
+      const deleteCommentSql = 'DELETE FROM pcomment WHERE id_proj = ?';
+      mysqlConnection.query(deleteCommentSql, [projectionId], (err: MysqlError | null, commentResult: any) => {
+        if (err) {
+          console.log(err);
+          res.status(500).send('Error deleting projection comment record');
+        } else {
+          deleteProjection(projectionId, res);
+        }
+      });
     } else {
-      res.send(`${req.params.id}`);
+      deleteProjection(projectionId, res);
     }
   });
 });
+
+function deleteProjection(projectionId: string, res: Response) {
+  const deleteProjectionSql = 'DELETE FROM projection WHERE id_proj = ?';
+  mysqlConnection.query(deleteProjectionSql, [projectionId], (err: MysqlError | null, projectionResult: any) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send('Error deleting projection record');
+    } else {
+      if (projectionResult.affectedRows === 0) {
+        res.status(404).send('Projection record not found');
+      } else {
+        res.send(`${projectionId}`);
+      }
+    }
+  });
+}
+
+
 
 export default router;
