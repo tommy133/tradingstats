@@ -24,12 +24,16 @@ const mapRowToProjection = (row: any): Projection => {
   };
 };
 
+const queryGET = `SELECT projection.id_proj, symbol.id_sym, 
+symbol.name_sym, projection.updown, projection.date_proj, projection.graph, 
+projection.name_tf, status.id_st, status.name_st
+FROM projection
+JOIN symbol ON projection.id_sym = symbol.id_sym
+JOIN status ON projection.id_st = status.id_st`
+
 router.get('/', (req: Request, res: Response) => {
   mysqlConnection.query(
-    `SELECT projection.id_proj, symbol.id_sym, symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.id_st, status.name_st
-    FROM projection
-    JOIN symbol ON projection.id_sym = symbol.id_sym
-    JOIN status ON projection.id_st = status.id_st`,
+    queryGET,
     (err: Error, rows: Projection[]) => {
       if (!err){
         const projections: Projection[] = rows.map(mapRowToProjection);
@@ -42,11 +46,7 @@ router.get('/', (req: Request, res: Response) => {
 
 router.get('/:id', (req: Request, res: Response) => {
   mysqlConnection.query(
-    `SELECT projection.id_proj, symbol.id_sym, symbol.name_sym, projection.updown, projection.date_proj, projection.graph, projection.name_tf, status.id_st, status.name_st
-    FROM projection
-    JOIN symbol ON projection.id_sym = symbol.id_sym
-    JOIN status ON projection.id_st = status.id_st
-    WHERE id_proj = ?`,
+    queryGET + ` WHERE id_proj = ?`,
     [req.params.id],
     (err: MysqlError | null, rows: Projection[]) => {
       if (!err) {
