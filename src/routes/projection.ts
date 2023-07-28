@@ -1,43 +1,25 @@
 import express, { Request, Response, Router } from 'express';
 import mysqlConnection from './../config/db';
 import { MysqlError } from 'mysql';
+import { Projection } from '../model/projection';
 
 const router: Router = express.Router();
-
-interface Symbol {
-  id: number;
-  nameSymbol: string;
-}
-
-interface Status {
-  id: number;
-  nameStatus: string;
-}
-
-export interface Projection {
-  id: number;
-  symbol: Symbol;
-  updown: boolean;
-  date?: string;
-  graph?: string;
-  timeframe: string;
-  status: Status;
-}
 
 const mapRowToProjection = (row: any): Projection => {
   return {
     id: row.id_proj,
     symbol: {
-      id: row.id_sym,
-      nameSymbol: row.name_sym,
+      id_sym: row.id_sym,
+      name_sym: row.name_sym,
+      name_mkt: row.name_mkt,
     },
     updown: row.updown,
     date: row.date_proj,
     graph: row.graph,
     timeframe: row.name_tf,
     status: {
-      id: row.id_st,
-      nameStatus: row.name_st,
+      id_st: row.id_st,
+      name_st: row.name_st,
     },
   };
 };
