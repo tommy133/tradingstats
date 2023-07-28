@@ -5,7 +5,7 @@ import { MysqlError } from 'mysql';
 const router: Router = express.Router();
 
 export interface ProjectionComment {
-  id_pc?: number;
+  id_pc: number;
   pcomment: string;
   id_proj: number;
 }
