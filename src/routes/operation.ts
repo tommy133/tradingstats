@@ -2,6 +2,7 @@ import express, { Request, Response, Router } from 'express';
 import mysqlConnection from './../config/db';
 import { MysqlError } from 'mysql';
 import { Operation } from '../model/operation';
+import { convertDatesToLocalTime } from '../utils/shared-utils';
 
 const router: Router = express.Router();
 
@@ -39,16 +40,31 @@ FROM operation JOIN symbol ON operation.id_sym = symbol.id_sym JOIN status ON op
 JOIN account ON operation.id_ac = account.id_ac`
 
 router.get('/', (req: Request, res: Response) => {
-    mysqlConnection.query(
-        queryGET,
-      (err: Error, rows: Operation[]) => {
-        if (!err){
-          const operations: Operation[] = rows.map(mapRowToOperation);
-          res.json(operations);
-        }
-        else console.log(err);
+  mysqlConnection.query(
+      queryGET,
+    (err: Error, rows: Operation[]) => {
+      if (!err){
+        const operations: Operation[] = rows.map(mapRowToOperation);
+        res.json(operations);
       }
-    );
-  });
+      else console.log(err);
+    }
+  );
+});
+
+router.get('/:id', (req: Request, res: Response) => {
+  mysqlConnection.query(
+    queryGET + ` WHERE id_op = ?`,
+    [req.params.id],
+    (err: MysqlError | null, rows: Operation[]) => {
+      if (!err) {
+        const operations: Operation[] = rows.map(mapRowToOperation);
+        convertDatesToLocalTime(operations);
+        res.json(operations[0]);
+      }
+      else console.log(err);
+    }
+  );
+});
 
 export default router;
