@@ -12,6 +12,7 @@ import statusRoutes from './routes/status';
 import pcommentRoutes from './routes/pcomment';
 import fileRoutes from './routes/file';
 import operationRoutes from './routes/operation';
+import opcommentRoutes from './routes/opcomment';
 
 // Configuring express server
 app.use(bodyParser.json());
@@ -24,5 +25,6 @@ app.use('/statuses', statusRoutes);
 app.use('/pcomment', pcommentRoutes);
 app.use('/file', fileRoutes);
 app.use('/operations', operationRoutes);
+app.use('/opcomment', opcommentRoutes);
 
 export default app;
