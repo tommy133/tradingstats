@@ -109,4 +109,48 @@ router.put('/:id', (req: Request, res: Response) => {
   );
 });
 
+router.delete('/:id', (req: Request, res: Response) => {
+  const operationId = req.params.id;
+  // Check if there are comments associated with the operation
+  const checkCommentsSql = 'SELECT * FROM opcomment WHERE id_op = ?';
+  mysqlConnection.query(checkCommentsSql, [operationId], (err: MysqlError | null, comments: any[]) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send('Error checking associated comments');
+      return;
+    }
+
+    // If there are comments associated, delete them first
+    if (comments.length > 0) {
+      const deleteCommentSql = 'DELETE FROM opcomment WHERE id_op = ?';
+      mysqlConnection.query(deleteCommentSql, [operationId], (err: MysqlError | null, commentResult: any) => {
+        if (err) {
+          console.log(err);
+          res.status(500).send('Error deleting operation comment record');
+        } else {
+          deleteOperation(operationId, res);
+        }
+      });
+    } else {
+      deleteOperation(operationId, res);
+    }
+  });
+});
+
+function deleteOperation(operationId: string, res: Response) {
+  const deleteOperationSql = 'DELETE FROM operation WHERE id_op = ?';
+  mysqlConnection.query(deleteOperationSql, [operationId], (err: MysqlError | null, operationResult: any) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send('Error deleting operation record');
+    } else {
+      if (operationResult.affectedRows === 0) {
+        res.status(404).send('Operation record not found');
+      } else {
+        res.send(`${operationId}`);
+      }
+    }
+  });
+}
+
 export default router;
