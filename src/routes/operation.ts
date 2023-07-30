@@ -67,4 +67,46 @@ router.get('/:id', (req: Request, res: Response) => {
   );
 });
 
+router.post('/', (req: Request, res: Response) => {
+  const { id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points } = req.body;
+  const sql =
+    'INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  mysqlConnection.query(
+    sql,
+    [id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points],
+    (err: MysqlError | null, result: any) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send('Error inserting operation record');
+      } else {
+        res.send(`${result.insertId}`);
+      }
+    }
+  );
+});
+
+router.put('/:id', (req: Request, res: Response) => {
+  const { id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points } = req.body;
+  const id = req.params.id;
+  const sql =
+    `UPDATE operation SET id_sym = IFNULL(?, id_sym), updown = IFNULL(?, updown), time_op = IFNULL(?, time_op),
+    time_close = IFNULL(?, time_close), graph = IFNULL(?, graph), name_tf = IFNULL(?, name_tf), 
+    id_st = IFNULL(?, id_st), id_ac = IFNULL(?, id_ac), volume = IFNULL(?, volume), rr_ratio = IFNULL(?, rr_ratio)
+    , points = IFNULL(?, points)  WHERE id_op = ?`;
+  mysqlConnection.query(
+    sql,
+    [id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points, id],
+    (err: MysqlError | null, result: any) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send('Error updating operation record');
+      } else if (result.affectedRows === 0) {
+        res.status(404).send('Operation record not found');
+      } else {
+        res.send(`${id}`);
+      }
+    }
+  );
+});
+
 export default router;
