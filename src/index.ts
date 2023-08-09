@@ -1,5 +1,6 @@
 import server from './server';
 
-const port = process.env.PORT || 8080; // PORT ENVIRONMENT VARIABLE
+const hostname = '0.0.0.0'
+const port = 3000
 
-server.listen(port, () => console.log(`Server running on port ${port}...`));
+server.listen(port, hostname, () => console.log(`Server listening at http://${hostname}:${port}/`));
