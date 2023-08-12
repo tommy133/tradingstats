@@ -4,5 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const server_1 = __importDefault(require("./server"));
-const PORT = process.env.PORT || 3000;
-server_1.default.listen(PORT, () => console.log(`Server listening at ${PORT}`));
+const hostname = '0.0.0.0';
+const port = 8080;
+server_1.default.listen(port, hostname, () => console.log(`Server listening at http://${hostname}:${port}/`));
