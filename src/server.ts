@@ -2,10 +2,6 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import compression from 'compression';
-
-const app = express();
-app.use(compression());
-
 import projectionRoutes from './routes/projection';
 import symbolRoutes from './routes/symbol';
 import statusRoutes from './routes/status';
@@ -13,6 +9,9 @@ import pcommentRoutes from './routes/pcomment';
 import fileRoutes from './routes/file';
 import operationRoutes from './routes/operation';
 import opcommentRoutes from './routes/opcomment';
+
+const app = express();
+app.use(compression());
 
 // Configuring express server
 app.use(bodyParser.json());
