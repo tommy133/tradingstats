@@ -16,6 +16,8 @@ app.use(compression());
 app.use(bodyParser.json());
 app.use(cors());
 
+app.use(express.static('dist/tradingstatsapp'))
+
 // Expose routes
 app.use('/projections', projectionRoutes);
 app.use('/symbols', symbolRoutes);
