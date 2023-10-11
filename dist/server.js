@@ -18,6 +18,7 @@ app.use((0, compression_1.default)());
 // Configuring express server
 app.use(body_parser_1.default.json());
 app.use((0, cors_1.default)());
+app.use(express_1.default.static('dist/tradingstatsapp'));
 // Expose routes
 app.use('/projections', projection_1.default);
 app.use('/symbols', symbol_1.default);
