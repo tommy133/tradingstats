@@ -7,8 +7,6 @@ const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
 const compression_1 = __importDefault(require("compression"));
-const app = (0, express_1.default)();
-app.use((0, compression_1.default)());
 const projection_1 = __importDefault(require("./routes/projection"));
 const symbol_1 = __importDefault(require("./routes/symbol"));
 const status_1 = __importDefault(require("./routes/status"));
@@ -16,6 +14,8 @@ const pcomment_1 = __importDefault(require("./routes/pcomment"));
 const file_1 = __importDefault(require("./routes/file"));
 const operation_1 = __importDefault(require("./routes/operation"));
 const opcomment_1 = __importDefault(require("./routes/opcomment"));
+const app = (0, express_1.default)();
+app.use((0, compression_1.default)());
 // Configuring express server
 app.use(body_parser_1.default.json());
 app.use((0, cors_1.default)());

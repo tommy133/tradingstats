@@ -110,16 +110,30 @@ router.delete('/:id', (req, res) => {
                     console.log(err);
                     res.status(500).send('Error deleting operation comment record');
                 }
-                else {
-                    deleteOperation(operationId, res);
-                }
             });
         }
-        else {
-            deleteOperation(operationId, res);
-        }
+        checkDeleteFile(operationId);
+        deleteOperation(operationId, res);
     });
 });
+function checkDeleteFile(idProj) {
+    const sql = `SELECT graph FROM operation WHERE id_op = ?`;
+    db_1.default.query(sql, [idProj], (err, rows) => {
+        if (!err) {
+            if (rows[0].graph !== null) {
+                const fs = require('fs');
+                const path = require('path');
+                const filePath = path.join(__dirname, `../../uploads/${rows[0].graph}`);
+                fs.unlink(filePath, (err) => {
+                    if (err)
+                        throw err;
+                });
+            }
+        }
+        else
+            console.log(err);
+    });
+}
 function deleteOperation(operationId, res) {
     const deleteOperationSql = 'DELETE FROM operation WHERE id_op = ?';
     db_1.default.query(deleteOperationSql, [operationId], (err, operationResult) => {

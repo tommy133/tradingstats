@@ -120,13 +120,11 @@ router.delete('/:id', (req: Request, res: Response) => {
         if (err) {
           console.log(err);
           res.status(500).send('Error deleting projection comment record');
-        } else {
-          deleteProjection(projectionId, res);
-        }
+        } 
       });
-    } else {
-      deleteProjection(projectionId, res);
-    }
+    } 
+    checkDeleteFile(projectionId)
+    deleteProjection(projectionId, res);
   });
 });
 
@@ -146,6 +144,25 @@ function deleteProjection(projectionId: string, res: Response) {
   });
 }
 
-
+function checkDeleteFile(idProj: string){
+  const sql = `SELECT graph FROM projection WHERE id_proj = ?`;
+  mysqlConnection.query(
+    sql,
+    [idProj],
+    (err: MysqlError | null, rows: any[]) => {
+      if (!err) {
+        if(rows[0].graph !== null){
+          const fs = require('fs');
+          const path = require('path');
+          const filePath = path.join(__dirname, `../../uploads/${rows[0].graph}`);
+          fs.unlink(filePath, (err: any) => {
+            if (err) throw err;
+          });
+        }
+      }
+      else console.log(err);
+    }
+  );
+}
 
 export default router;
