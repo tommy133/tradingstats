@@ -6,7 +6,6 @@ import projectionRoutes from './routes/projection';
 import symbolRoutes from './routes/symbol';
 import statusRoutes from './routes/status';
 import pcommentRoutes from './routes/pcomment';
-import fileRoutes from './routes/file';
 import operationRoutes from './routes/operation';
 import opcommentRoutes from './routes/opcomment';
 
@@ -22,7 +21,6 @@ app.use('/projections', projectionRoutes);
 app.use('/symbols', symbolRoutes);
 app.use('/statuses', statusRoutes);
 app.use('/pcomment', pcommentRoutes);
-app.use('/file', fileRoutes);
 app.use('/operations', operationRoutes);
 app.use('/opcomment', opcommentRoutes);
 

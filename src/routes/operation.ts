@@ -130,31 +130,11 @@ router.delete('/:id', (req: Request, res: Response) => {
         } 
       });
     } 
-    checkDeleteFile(operationId)
     deleteOperation(operationId, res);
   });
 });
 
-function checkDeleteFile(idProj: string){
-  const sql = `SELECT graph FROM operation WHERE id_op = ?`;
-  mysqlConnection.query(
-    sql,
-    [idProj],
-    (err: MysqlError | null, rows: any[]) => {
-      if (!err) {
-        if(rows[0].graph !== null){
-          const fs = require('fs');
-          const path = require('path');
-          const filePath = path.join(__dirname, `../../uploads/${rows[0].graph}`);
-          fs.unlink(filePath, (err: any) => {
-            if (err) throw err;
-          });
-        }
-      }
-      else console.log(err);
-    }
-  );
-}
+
 
 function deleteOperation(operationId: string, res: Response) {
   const deleteOperationSql = 'DELETE FROM operation WHERE id_op = ?';

@@ -104,7 +104,6 @@ router.delete('/:id', (req, res) => {
                 }
             });
         }
-        checkDeleteFile(projectionId);
         deleteProjection(projectionId, res);
     });
 });
@@ -123,24 +122,6 @@ function deleteProjection(projectionId, res) {
                 res.send(`${projectionId}`);
             }
         }
-    });
-}
-function checkDeleteFile(idProj) {
-    const sql = `SELECT graph FROM projection WHERE id_proj = ?`;
-    db_1.default.query(sql, [idProj], (err, rows) => {
-        if (!err) {
-            if (rows[0].graph !== null) {
-                const fs = require('fs');
-                const path = require('path');
-                const filePath = path.join(__dirname, `../../uploads/${rows[0].graph}`);
-                fs.unlink(filePath, (err) => {
-                    if (err)
-                        throw err;
-                });
-            }
-        }
-        else
-            console.log(err);
     });
 }
 exports.default = router;
