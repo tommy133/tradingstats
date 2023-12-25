@@ -38,7 +38,7 @@ operation.time_op, operation.time_close, operation.name_tf, operation.graph, sta
 status.name_st, account.id_ac, account.account_type, operation.volume, operation.rr_ratio, operation.points
 FROM operation JOIN symbol ON operation.id_sym = symbol.id_sym JOIN status ON operation.id_st = status.id_st 
 JOIN account ON operation.id_ac = account.id_ac`;
-router.get('/', (req, res) => {
+router.get("/", (req, res) => {
     db_1.default.query(queryGET, (err, rows) => {
         if (!err) {
             const operations = rows.map(mapRowToOperation);
@@ -48,10 +48,10 @@ router.get('/', (req, res) => {
             console.log(err);
     });
 });
-router.get('/:id', (req, res) => {
-    db_1.default.query(queryGET + ` WHERE id_op = ?`, [req.params.id], (err, rows) => {
+router.get("/:id", (req, res) => {
+    db_1.default.query(queryGET + ` WHERE id_op = ?`, [req.params.id], (err, result) => {
         if (!err) {
-            const operations = rows.map(mapRowToOperation);
+            const operations = result.map(mapRowToOperation);
             (0, shared_utils_1.convertDatesToLocalTime)(operations);
             res.json(operations[0]);
         }
@@ -59,56 +59,82 @@ router.get('/:id', (req, res) => {
             console.log(err);
     });
 });
-router.post('/', (req, res) => {
-    const { id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points } = req.body;
-    const sql = 'INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    db_1.default.query(sql, [id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points], (err, result) => {
+router.post("/", (req, res) => {
+    const { id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points, } = req.body;
+    const sql = "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    db_1.default.query(sql, [
+        id_sym,
+        updown,
+        time_op,
+        time_close,
+        graph,
+        name_tf,
+        id_st,
+        id_ac,
+        volume,
+        rr_ratio,
+        points,
+    ], (err, result) => {
         if (err) {
             console.log(err);
-            res.status(500).send('Error inserting operation record');
+            res.status(500).send("Error inserting operation record");
         }
         else {
             res.send(`${result.insertId}`);
         }
     });
 });
-router.put('/:id', (req, res) => {
-    const { id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points } = req.body;
+router.put("/:id", (req, res) => {
+    const { id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points, } = req.body;
     const id = req.params.id;
     const sql = `UPDATE operation SET id_sym = IFNULL(?, id_sym), updown = IFNULL(?, updown), time_op = IFNULL(?, time_op),
     time_close = IFNULL(?, time_close), graph = IFNULL(?, graph), name_tf = IFNULL(?, name_tf), 
     id_st = IFNULL(?, id_st), id_ac = IFNULL(?, id_ac), volume = IFNULL(?, volume), rr_ratio = IFNULL(?, rr_ratio)
     , points = IFNULL(?, points)  WHERE id_op = ?`;
-    db_1.default.query(sql, [id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points, id], (err, result) => {
+    db_1.default.query(sql, [
+        id_sym,
+        updown,
+        time_op,
+        time_close,
+        graph,
+        name_tf,
+        id_st,
+        id_ac,
+        volume,
+        rr_ratio,
+        points,
+        id,
+    ], (err, result) => {
         if (err) {
             console.log(err);
-            res.status(500).send('Error updating operation record');
+            res.status(500).send("Error updating operation record");
         }
         else if (result.affectedRows === 0) {
-            res.status(404).send('Operation record not found');
+            res.status(404).send("Operation record not found");
         }
         else {
             res.send(`${id}`);
         }
     });
 });
-router.delete('/:id', (req, res) => {
+router.delete("/:id", (req, res) => {
     const operationId = req.params.id;
     // Check if there are comments associated with the operation
-    const checkCommentsSql = 'SELECT * FROM opcomment WHERE id_op = ?';
-    db_1.default.query(checkCommentsSql, [operationId], (err, comments) => {
+    const checkCommentsSql = "SELECT * FROM opcomment WHERE id_op = ?";
+    db_1.default.query(checkCommentsSql, [operationId], (err, result) => {
         if (err) {
             console.log(err);
-            res.status(500).send('Error checking associated comments');
+            res.status(500).send("Error checking associated comments");
             return;
         }
+        const comments = result;
         // If there are comments associated, delete them first
         if (comments.length > 0) {
-            const deleteCommentSql = 'DELETE FROM opcomment WHERE id_op = ?';
+            const deleteCommentSql = "DELETE FROM opcomment WHERE id_op = ?";
             db_1.default.query(deleteCommentSql, [operationId], (err, commentResult) => {
                 if (err) {
                     console.log(err);
-                    res.status(500).send('Error deleting operation comment record');
+                    res.status(500).send("Error deleting operation comment record");
                 }
             });
         }
@@ -116,15 +142,15 @@ router.delete('/:id', (req, res) => {
     });
 });
 function deleteOperation(operationId, res) {
-    const deleteOperationSql = 'DELETE FROM operation WHERE id_op = ?';
+    const deleteOperationSql = "DELETE FROM operation WHERE id_op = ?";
     db_1.default.query(deleteOperationSql, [operationId], (err, operationResult) => {
         if (err) {
             console.log(err);
-            res.status(500).send('Error deleting operation record');
+            res.status(500).send("Error deleting operation record");
         }
         else {
             if (operationResult.affectedRows === 0) {
-                res.status(404).send('Operation record not found');
+                res.status(404).send("Operation record not found");
             }
             else {
                 res.send(`${operationId}`);

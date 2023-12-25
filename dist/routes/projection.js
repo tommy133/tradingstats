@@ -31,7 +31,7 @@ projection.name_tf, status.id_st, status.name_st
 FROM projection
 JOIN symbol ON projection.id_sym = symbol.id_sym
 JOIN status ON projection.id_st = status.id_st`;
-router.get('/', (req, res) => {
+router.get("/", (req, res) => {
     db_1.default.query(queryGET, (err, rows) => {
         if (!err) {
             const projections = rows.map(mapRowToProjection);
@@ -41,10 +41,10 @@ router.get('/', (req, res) => {
             console.log(err);
     });
 });
-router.get('/:id', (req, res) => {
-    db_1.default.query(queryGET + ` WHERE id_proj = ?`, [req.params.id], (err, rows) => {
+router.get("/:id", (req, res) => {
+    db_1.default.query(queryGET + ` WHERE id_proj = ?`, [req.params.id], (err, result) => {
         if (!err) {
-            const projections = rows.map(mapRowToProjection);
+            const projections = result.map(mapRowToProjection);
             (0, shared_utils_1.convertDatesToLocalTime)(projections);
             res.json(projections[0]);
         }
@@ -52,20 +52,20 @@ router.get('/:id', (req, res) => {
             console.log(err);
     });
 });
-router.post('/', (req, res) => {
+router.post("/", (req, res) => {
     const { id_sym, updown, date_proj, graph, name_tf, id_st } = req.body;
-    const sql = 'INSERT INTO projection (id_sym, updown, date_proj, graph, name_tf, id_st) VALUES (?, ?, ?, ?, ?, ?)';
+    const sql = "INSERT INTO projection (id_sym, updown, date_proj, graph, name_tf, id_st) VALUES (?, ?, ?, ?, ?, ?)";
     db_1.default.query(sql, [id_sym, updown, date_proj, graph, name_tf, id_st], (err, result) => {
         if (err) {
             console.log(err);
-            res.status(500).send('Error inserting projection record');
+            res.status(500).send("Error inserting projection record");
         }
         else {
             res.send(`${result.insertId}`);
         }
     });
 });
-router.put('/:id', (req, res) => {
+router.put("/:id", (req, res) => {
     const { updown, date_proj, graph, id_sym, name_tf, id_st } = req.body;
     const id = req.params.id;
     const sql = `UPDATE projection SET updown = IFNULL(?, updown), date_proj = IFNULL(?, date_proj), 
@@ -74,33 +74,34 @@ router.put('/:id', (req, res) => {
     db_1.default.query(sql, [updown, date_proj, graph, id_sym, name_tf, id_st, id], (err, result) => {
         if (err) {
             console.log(err);
-            res.status(500).send('Error updating projection record');
+            res.status(500).send("Error updating projection record");
         }
         else if (result.affectedRows === 0) {
-            res.status(404).send('Projection record not found');
+            res.status(404).send("Projection record not found");
         }
         else {
             res.send(`${id}`);
         }
     });
 });
-router.delete('/:id', (req, res) => {
+router.delete("/:id", (req, res) => {
     const projectionId = req.params.id;
     // Check if there are comments associated with the projection
-    const checkCommentsSql = 'SELECT * FROM pcomment WHERE id_proj = ?';
-    db_1.default.query(checkCommentsSql, [projectionId], (err, comments) => {
+    const checkCommentsSql = "SELECT * FROM pcomment WHERE id_proj = ?";
+    db_1.default.query(checkCommentsSql, [projectionId], (err, result) => {
         if (err) {
             console.log(err);
-            res.status(500).send('Error checking associated comments');
+            res.status(500).send("Error checking associated comments");
             return;
         }
+        const comments = result;
         // If there are comments associated, delete them first
         if (comments.length > 0) {
-            const deleteCommentSql = 'DELETE FROM pcomment WHERE id_proj = ?';
-            db_1.default.query(deleteCommentSql, [projectionId], (err, commentResult) => {
+            const deleteCommentSql = "DELETE FROM pcomment WHERE id_proj = ?";
+            db_1.default.query(deleteCommentSql, [projectionId], (err) => {
                 if (err) {
                     console.log(err);
-                    res.status(500).send('Error deleting projection comment record');
+                    res.status(500).send("Error deleting projection comment record");
                 }
             });
         }
@@ -108,15 +109,15 @@ router.delete('/:id', (req, res) => {
     });
 });
 function deleteProjection(projectionId, res) {
-    const deleteProjectionSql = 'DELETE FROM projection WHERE id_proj = ?';
+    const deleteProjectionSql = "DELETE FROM projection WHERE id_proj = ?";
     db_1.default.query(deleteProjectionSql, [projectionId], (err, projectionResult) => {
         if (err) {
             console.log(err);
-            res.status(500).send('Error deleting projection record');
+            res.status(500).send("Error deleting projection record");
         }
         else {
             if (projectionResult.affectedRows === 0) {
-                res.status(404).send('Projection record not found');
+                res.status(404).send("Projection record not found");
             }
             else {
                 res.send(`${projectionId}`);

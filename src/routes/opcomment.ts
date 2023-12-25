@@ -1,6 +1,7 @@
-import express, { Request, Response, Router } from 'express';
-import mysqlConnection from './../config/db';
-import { MysqlError } from 'mysql';
+import express, { Request, Response, Router } from "express";
+import mysqlConnection from "./../config/db";
+import { QueryError } from "mysql2";
+import { ProjectionComment } from "./pcomment";
 
 const router: Router = express.Router();
 
@@ -10,8 +11,7 @@ export interface OperationComment {
   id_op: number;
 }
 
-
-router.get('/', (req: Request, res: Response) => {
+router.get("/", (req: Request, res: Response) => {
   mysqlConnection.query(
     `SELECT * FROM opcomment`,
     (err: Error, rows: OperationComment[]) => {
@@ -21,29 +21,30 @@ router.get('/', (req: Request, res: Response) => {
   );
 });
 
-router.get('/:id', (req: Request, res: Response) => {
+router.get("/:id", (req: Request, res: Response) => {
   mysqlConnection.query(
     `SELECT * FROM opcomment
     WHERE id_op = ?`,
     [req.params.id],
-    (err: MysqlError | null, rows: OperationComment[]) => {
-      if (!err) res.json(rows[0]);
-      else console.log(err);
+    (err: QueryError | null, result: any) => {
+      if (!err) {
+        const rows: OperationComment[] = result;
+        res.json(rows[0]);
+      } else console.log(err);
     }
   );
 });
 
-router.post('/', (req: Request, res: Response) => {
+router.post("/", (req: Request, res: Response) => {
   const { opcomment, id_op } = req.body;
-  const sql =
-    'INSERT INTO opcomment (opcomment, id_op) VALUES (?, ?)';
+  const sql = "INSERT INTO opcomment (opcomment, id_op) VALUES (?, ?)";
   mysqlConnection.query(
     sql,
     [opcomment, id_op],
-    (err: MysqlError | null, result: any) => {
+    (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error inserting operation comment record');
+        res.status(500).send("Error inserting operation comment record");
       } else {
         res.send(`${result.insertId}`);
       }
@@ -51,20 +52,19 @@ router.post('/', (req: Request, res: Response) => {
   );
 });
 
-router.put('/:id', (req: Request, res: Response) => {
+router.put("/:id", (req: Request, res: Response) => {
   const { opcomment } = req.body;
   const id = req.params.id;
-  const sql =
-    `UPDATE opcomment SET opcomment=? WHERE id_opc = ?`;
+  const sql = `UPDATE opcomment SET opcomment=? WHERE id_opc = ?`;
   mysqlConnection.query(
     sql,
     [opcomment, id],
-    (err: MysqlError | null, result: any) => {
+    (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error updating operation comment record');
+        res.status(500).send("Error updating operation comment record");
       } else if (result.affectedRows === 0) {
-        res.status(404).send('Operation comment record not found');
+        res.status(404).send("Operation comment record not found");
       } else {
         res.send(`${id}`);
       }
@@ -72,19 +72,22 @@ router.put('/:id', (req: Request, res: Response) => {
   );
 });
 
-
-router.delete('/:id', (req: Request, res: Response) => {
-  const sql = 'DELETE FROM opcomment WHERE id_op = ?';
-  mysqlConnection.query(sql, [req.params.id], (err: MysqlError | null, result: any) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send('Error deleting operation comment record');
-    } else if (result.affectedRows === 0) {
-      res.status(404).send('Operation comment record not found');
-    } else {
-      res.send(`${req.params.id}`);
+router.delete("/:id", (req: Request, res: Response) => {
+  const sql = "DELETE FROM opcomment WHERE id_op = ?";
+  mysqlConnection.query(
+    sql,
+    [req.params.id],
+    (err: QueryError | null, result: any, fields: any) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send("Error deleting operation comment record");
+      } else if (result.affectedRows === 0) {
+        res.status(404).send("Operation comment record not found");
+      } else {
+        res.send(`${req.params.id}`);
+      }
     }
-  });
+  );
 });
 
 export default router;
