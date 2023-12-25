@@ -23,14 +23,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const mysql_1 = __importDefault(require("mysql"));
 const dotenv = __importStar(require("dotenv"));
+const mysql2_1 = require("mysql2");
 dotenv.config();
-const mysqlConnection = mysql_1.default.createConnection({
+const mysqlConnection = (0, mysql2_1.createConnection)({
     host: process.env.DB_HOST,
     user: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,

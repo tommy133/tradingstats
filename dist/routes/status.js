@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const db_1 = __importDefault(require("./../config/db"));
 const router = express_1.default.Router();
-router.get('/', (req, res) => {
+router.get("/", (req, res) => {
     db_1.default.query(`SELECT status.id_st, status.name_st FROM 
     status`, (err, rows, fields) => {
         if (!err)
@@ -15,11 +15,12 @@ router.get('/', (req, res) => {
             console.log(err);
     });
 });
-router.get('/:id', (req, res) => {
+router.get("/:id", (req, res) => {
     db_1.default.query(`SELECT status.id_st, status.name_st FROM status
-    WHERE id_st = ?`, [req.params.id], (err, rows, fields) => {
+    WHERE id_st = ?`, [req.params.id], (err, row, fields) => {
+        const status = row[0];
         if (!err)
-            res.send(rows);
+            res.send(status);
         else
             console.log(err);
     });

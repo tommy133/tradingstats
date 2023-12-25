@@ -1,8 +1,9 @@
-import express, { Request, Response, Router } from 'express';
-import mysqlConnection from './../config/db';
-import { MysqlError } from 'mysql';
-import { Projection } from '../model/projection';
-import { convertDatesToLocalTime } from '../utils/shared-utils';
+import express, { Request, Response, Router } from "express";
+import mysqlConnection from "./../config/db";
+import { Projection } from "../model/projection";
+import { convertDatesToLocalTime } from "../utils/shared-utils";
+import { QueryError } from "mysql2";
+import { ProjectionComment } from "./pcomment";
 
 const router: Router = express.Router();
 
@@ -30,47 +31,42 @@ symbol.name_sym, projection.updown, projection.date_proj, projection.graph,
 projection.name_tf, status.id_st, status.name_st
 FROM projection
 JOIN symbol ON projection.id_sym = symbol.id_sym
-JOIN status ON projection.id_st = status.id_st`
+JOIN status ON projection.id_st = status.id_st`;
 
-router.get('/', (req: Request, res: Response) => {
-  mysqlConnection.query(
-    queryGET,
-    (err: Error, rows: Projection[]) => {
-      if (!err){
-        const projections: Projection[] = rows.map(mapRowToProjection);
-        res.json(projections);
-      }
-      else console.log(err);
-    }
-  );
+router.get("/", (req: Request, res: Response) => {
+  mysqlConnection.query(queryGET, (err: Error, rows: Projection[]) => {
+    if (!err) {
+      const projections: Projection[] = rows.map(mapRowToProjection);
+      res.json(projections);
+    } else console.log(err);
+  });
 });
 
-router.get('/:id', (req: Request, res: Response) => {
+router.get("/:id", (req: Request, res: Response) => {
   mysqlConnection.query(
     queryGET + ` WHERE id_proj = ?`,
     [req.params.id],
-    (err: MysqlError | null, rows: Projection[]) => {
+    (err: QueryError | null, result: any) => {
       if (!err) {
-        const projections: Projection[] = rows.map(mapRowToProjection);
+        const projections: Projection[] = result.map(mapRowToProjection);
         convertDatesToLocalTime(projections);
         res.json(projections[0]);
-      }
-      else console.log(err);
+      } else console.log(err);
     }
   );
 });
 
-router.post('/', (req: Request, res: Response) => {
+router.post("/", (req: Request, res: Response) => {
   const { id_sym, updown, date_proj, graph, name_tf, id_st } = req.body;
   const sql =
-    'INSERT INTO projection (id_sym, updown, date_proj, graph, name_tf, id_st) VALUES (?, ?, ?, ?, ?, ?)';
+    "INSERT INTO projection (id_sym, updown, date_proj, graph, name_tf, id_st) VALUES (?, ?, ?, ?, ?, ?)";
   mysqlConnection.query(
     sql,
     [id_sym, updown, date_proj, graph, name_tf, id_st],
-    (err: MysqlError | null, result: any) => {
+    (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error inserting projection record');
+        res.status(500).send("Error inserting projection record");
       } else {
         res.send(`${result.insertId}`);
       }
@@ -78,22 +74,21 @@ router.post('/', (req: Request, res: Response) => {
   );
 });
 
-router.put('/:id', (req: Request, res: Response) => {
+router.put("/:id", (req: Request, res: Response) => {
   const { updown, date_proj, graph, id_sym, name_tf, id_st } = req.body;
   const id = req.params.id;
-  const sql =
-    `UPDATE projection SET updown = IFNULL(?, updown), date_proj = IFNULL(?, date_proj), 
+  const sql = `UPDATE projection SET updown = IFNULL(?, updown), date_proj = IFNULL(?, date_proj), 
     graph = IFNULL(?, graph), id_sym = IFNULL(?, id_sym), name_tf = IFNULL(?, name_tf)
     , id_st = IFNULL(?, id_st) WHERE id_proj = ?`;
   mysqlConnection.query(
     sql,
     [updown, date_proj, graph, id_sym, name_tf, id_st, id],
-    (err: MysqlError | null, result: any) => {
+    (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error updating projection record');
+        res.status(500).send("Error updating projection record");
       } else if (result.affectedRows === 0) {
-        res.status(404).send('Projection record not found');
+        res.status(404).send("Projection record not found");
       } else {
         res.send(`${id}`);
       }
@@ -101,47 +96,58 @@ router.put('/:id', (req: Request, res: Response) => {
   );
 });
 
-
-router.delete('/:id', (req: Request, res: Response) => {
+router.delete("/:id", (req: Request, res: Response) => {
   const projectionId = req.params.id;
   // Check if there are comments associated with the projection
-  const checkCommentsSql = 'SELECT * FROM pcomment WHERE id_proj = ?';
-  mysqlConnection.query(checkCommentsSql, [projectionId], (err: MysqlError | null, comments: any[]) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send('Error checking associated comments');
-      return;
-    }
+  const checkCommentsSql = "SELECT * FROM pcomment WHERE id_proj = ?";
+  mysqlConnection.query(
+    checkCommentsSql,
+    [projectionId],
+    (err: QueryError | null, result: any) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send("Error checking associated comments");
+        return;
+      }
 
-    // If there are comments associated, delete them first
-    if (comments.length > 0) {
-      const deleteCommentSql = 'DELETE FROM pcomment WHERE id_proj = ?';
-      mysqlConnection.query(deleteCommentSql, [projectionId], (err: MysqlError | null, commentResult: any) => {
-        if (err) {
-          console.log(err);
-          res.status(500).send('Error deleting projection comment record');
-        } 
-      });
-    } 
-    deleteProjection(projectionId, res);
-  });
+      const comments: ProjectionComment[] = result;
+      // If there are comments associated, delete them first
+      if (comments.length > 0) {
+        const deleteCommentSql = "DELETE FROM pcomment WHERE id_proj = ?";
+        mysqlConnection.query(
+          deleteCommentSql,
+          [projectionId],
+          (err: QueryError | null) => {
+            if (err) {
+              console.log(err);
+              res.status(500).send("Error deleting projection comment record");
+            }
+          }
+        );
+      }
+      deleteProjection(projectionId, res);
+    }
+  );
 });
 
 function deleteProjection(projectionId: string, res: Response) {
-  const deleteProjectionSql = 'DELETE FROM projection WHERE id_proj = ?';
-  mysqlConnection.query(deleteProjectionSql, [projectionId], (err: MysqlError | null, projectionResult: any) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send('Error deleting projection record');
-    } else {
-      if (projectionResult.affectedRows === 0) {
-        res.status(404).send('Projection record not found');
+  const deleteProjectionSql = "DELETE FROM projection WHERE id_proj = ?";
+  mysqlConnection.query(
+    deleteProjectionSql,
+    [projectionId],
+    (err: QueryError | null, projectionResult: any) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send("Error deleting projection record");
       } else {
-        res.send(`${projectionId}`);
+        if (projectionResult.affectedRows === 0) {
+          res.status(404).send("Projection record not found");
+        } else {
+          res.send(`${projectionId}`);
+        }
       }
     }
-  });
+  );
 }
-
 
 export default router;

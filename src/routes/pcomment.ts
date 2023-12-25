@@ -1,6 +1,6 @@
-import express, { Request, Response, Router } from 'express';
-import mysqlConnection from './../config/db';
-import { MysqlError } from 'mysql';
+import express, { Request, Response, Router } from "express";
+import mysqlConnection from "./../config/db";
+import { QueryError } from "mysql2";
 
 const router: Router = express.Router();
 
@@ -10,8 +10,7 @@ export interface ProjectionComment {
   id_proj: number;
 }
 
-
-router.get('/', (req: Request, res: Response) => {
+router.get("/", (req: Request, res: Response) => {
   mysqlConnection.query(
     `SELECT * FROM pcomment`,
     (err: Error, rows: ProjectionComment[]) => {
@@ -21,29 +20,30 @@ router.get('/', (req: Request, res: Response) => {
   );
 });
 
-router.get('/:id', (req: Request, res: Response) => {
+router.get("/:id", (req: Request, res: Response) => {
   mysqlConnection.query(
     `SELECT * FROM pcomment
     WHERE id_proj = ?`,
     [req.params.id],
-    (err: MysqlError | null, rows: ProjectionComment[]) => {
-      if (!err) res.json(rows[0]);
-      else console.log(err);
+    (err: QueryError | null, results: any, fields: any) => {
+      if (!err) {
+        const rows: ProjectionComment[] = results;
+        res.json(rows[0]);
+      } else console.log(err);
     }
   );
 });
 
-router.post('/', (req: Request, res: Response) => {
+router.post("/", (req: Request, res: Response) => {
   const { pcomment, id_proj } = req.body;
-  const sql =
-    'INSERT INTO pcomment (pcomment, id_proj) VALUES (?, ?)';
+  const sql = "INSERT INTO pcomment (pcomment, id_proj) VALUES (?, ?)";
   mysqlConnection.query(
     sql,
     [pcomment, id_proj],
-    (err: MysqlError | null, result: any) => {
+    (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error inserting projection comment record');
+        res.status(500).send("Error inserting projection comment record");
       } else {
         res.send(`${result.insertId}`);
       }
@@ -51,20 +51,19 @@ router.post('/', (req: Request, res: Response) => {
   );
 });
 
-router.put('/:id', (req: Request, res: Response) => {
+router.put("/:id", (req: Request, res: Response) => {
   const { pcomment } = req.body;
   const id = req.params.id;
-  const sql =
-    `UPDATE pcomment SET pcomment=? WHERE id_pc = ?`;
+  const sql = `UPDATE pcomment SET pcomment=? WHERE id_pc = ?`;
   mysqlConnection.query(
     sql,
     [pcomment, id],
-    (err: MysqlError | null, result: any) => {
+    (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error updating projection comment record');
+        res.status(500).send("Error updating projection comment record");
       } else if (result.affectedRows === 0) {
-        res.status(404).send('Projection comment record not found');
+        res.status(404).send("Projection comment record not found");
       } else {
         res.send(`${id}`);
       }
@@ -72,19 +71,22 @@ router.put('/:id', (req: Request, res: Response) => {
   );
 });
 
-
-router.delete('/:id', (req: Request, res: Response) => {
-  const sql = 'DELETE FROM pcomment WHERE id_proj = ?';
-  mysqlConnection.query(sql, [req.params.id], (err: MysqlError | null, result: any) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send('Error deleting projection comment record');
-    } else if (result.affectedRows === 0) {
-      res.status(404).send('Projection comment record not found');
-    } else {
-      res.send(`${req.params.id}`);
+router.delete("/:id", (req: Request, res: Response) => {
+  const sql = "DELETE FROM pcomment WHERE id_proj = ?";
+  mysqlConnection.query(
+    sql,
+    [req.params.id],
+    (err: QueryError | null, result: any) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send("Error deleting projection comment record");
+      } else if (result.affectedRows === 0) {
+        res.status(404).send("Projection comment record not found");
+      } else {
+        res.send(`${req.params.id}`);
+      }
     }
-  });
+  );
 });
 
 export default router;
