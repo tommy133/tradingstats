@@ -3,6 +3,9 @@ FROM node:latest
 # Create app directory
 WORKDIR /app
 
+#Set db host to the IP address of the container
+ENV DB_HOST=172.17.0.2
+
 # Copy the package.json and package-lock.json files to /app 
 COPY package*.json ./
 
