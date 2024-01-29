@@ -18,4 +18,11 @@ mysqlConnection.connect((err: any) => {
   else console.log("Connection Failed!" + JSON.stringify(err, undefined, 2));
 });
 
+//Pinging database to keep connection alive
+setInterval(() => {
+  mysqlConnection.ping((err) => {
+    if (err) console.log(err);
+  });
+}, 60 * 60 * 1000);
+
 export default mysqlConnection;
