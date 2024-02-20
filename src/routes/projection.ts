@@ -23,15 +23,20 @@ const mapRowToProjection = (row: any): Projection => {
       id_st: row.id_st,
       name_st: row.name_st,
     },
+    market: {
+      id_mkt: row.id_mkt,
+      name_mkt: row.name_mkt,
+    },
   };
 };
 
 const queryGET = `SELECT projection.id_proj, symbol.id_sym, 
 symbol.name_sym, projection.updown, projection.date_proj, projection.graph, 
-projection.name_tf, status.id_st, status.name_st
+projection.name_tf, status.id_st, status.name_st, market.id_mkt, market.name_mkt
 FROM projection
 JOIN symbol ON projection.id_sym = symbol.id_sym
-JOIN status ON projection.id_st = status.id_st`;
+JOIN status ON projection.id_st = status.id_st
+JOIN market ON symbol.id_mkt = market.id_mkt`;
 
 router.get("/", (req: Request, res: Response) => {
   mysqlConnection.query(queryGET, (err: Error, rows: Projection[]) => {
