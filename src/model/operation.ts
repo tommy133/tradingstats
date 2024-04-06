@@ -1,18 +1,20 @@
 import { Account } from "./account";
+import { Market } from "./market";
 import { Status } from "./status";
 import { Symbol } from "./symbol";
 
 export interface Operation {
-    id: number;
-    symbol: Symbol;
-    updown: boolean;
-    dateOpen?: string;
-    dateClose?: string;
-    timeframe: string;
-    graph?: string;
-    status: Status;
-    account: Account;
-    volume?: number;
-    ratio?: number;
-    points?: number;
-  }
+  id: number;
+  symbol: Symbol;
+  updown: boolean;
+  dateOpen?: string;
+  dateClose?: string;
+  timeframe: string;
+  graph?: string;
+  status: Status;
+  account: Account;
+  volume?: number;
+  ratio?: number;
+  market: Market;
+  points?: number;
+}

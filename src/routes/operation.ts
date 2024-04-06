@@ -28,6 +28,10 @@ const mapRowToOperation = (row: any): Operation => {
       id_ac: row.id_ac,
       account_type: row.account_type,
     },
+    market: {
+      id_mkt: row.id_mkt,
+      name_mkt: row.name_mkt,
+    },
     volume: row.volume,
     ratio: row.rr_ratio,
     points: row.points,
@@ -35,10 +39,10 @@ const mapRowToOperation = (row: any): Operation => {
 };
 
 const queryGET = `SELECT operation.id_op, symbol.id_sym, symbol.name_sym, symbol.id_mkt, operation.updown, 
-operation.time_op, operation.time_close, operation.name_tf, operation.graph, status.id_st, 
+operation.time_op, operation.time_close, operation.name_tf, operation.graph, status.id_st, market.id_mkt, market.name_mkt, 
 status.name_st, account.id_ac, account.account_type, operation.volume, operation.rr_ratio, operation.points
 FROM operation JOIN symbol ON operation.id_sym = symbol.id_sym JOIN status ON operation.id_st = status.id_st 
-JOIN account ON operation.id_ac = account.id_ac`;
+JOIN account ON operation.id_ac = account.id_ac JOIN market ON symbol.id_mkt = market.id_mkt`;
 
 router.get("/", (req: Request, res: Response) => {
   mysqlConnection.query(queryGET, (err: Error, rows: Operation[]) => {
