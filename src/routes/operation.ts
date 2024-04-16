@@ -34,13 +34,13 @@ const mapRowToOperation = (row: any): Operation => {
     },
     volume: row.volume,
     ratio: row.rr_ratio,
-    points: row.points,
+    revenue: row.revenue,
   };
 };
 
 const queryGET = `SELECT operation.id_op, symbol.id_sym, symbol.name_sym, symbol.id_mkt, operation.updown, 
 operation.time_op, operation.time_close, operation.name_tf, operation.graph, status.id_st, market.id_mkt, market.name_mkt, 
-status.name_st, account.id_ac, account.account_type, operation.volume, operation.rr_ratio, operation.points
+status.name_st, account.id_ac, account.account_type, operation.volume, operation.rr_ratio, operation.revenue
 FROM operation JOIN symbol ON operation.id_sym = symbol.id_sym JOIN status ON operation.id_st = status.id_st 
 JOIN account ON operation.id_ac = account.id_ac JOIN market ON symbol.id_mkt = market.id_mkt`;
 
@@ -79,10 +79,10 @@ router.post("/", (req: Request, res: Response) => {
     id_ac,
     volume,
     rr_ratio,
-    points,
+    revenue,
   } = req.body;
   const sql =
-    "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, points) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   mysqlConnection.query(
     sql,
     [
@@ -96,7 +96,7 @@ router.post("/", (req: Request, res: Response) => {
       id_ac,
       volume,
       rr_ratio,
-      points,
+      revenue,
     ],
     (err: QueryError | null, result: any) => {
       if (err) {
@@ -121,13 +121,13 @@ router.put("/:id", (req: Request, res: Response) => {
     id_ac,
     volume,
     rr_ratio,
-    points,
+    revenue,
   } = req.body;
   const id = req.params.id;
   const sql = `UPDATE operation SET id_sym = IFNULL(?, id_sym), updown = IFNULL(?, updown), time_op = IFNULL(?, time_op),
     time_close = IFNULL(?, time_close), graph = IFNULL(?, graph), name_tf = IFNULL(?, name_tf), 
     id_st = IFNULL(?, id_st), id_ac = IFNULL(?, id_ac), volume = IFNULL(?, volume), rr_ratio = IFNULL(?, rr_ratio)
-    , points = IFNULL(?, points)  WHERE id_op = ?`;
+    , revenue = IFNULL(?, revenue)  WHERE id_op = ?`;
   mysqlConnection.query(
     sql,
     [
@@ -141,7 +141,7 @@ router.put("/:id", (req: Request, res: Response) => {
       id_ac,
       volume,
       rr_ratio,
-      points,
+      revenue,
       id,
     ],
     (err: QueryError | null, result: any) => {
