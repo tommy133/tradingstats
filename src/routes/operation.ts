@@ -45,12 +45,16 @@ FROM operation JOIN symbol ON operation.id_sym = symbol.id_sym JOIN status ON op
 JOIN account ON operation.id_ac = account.id_ac JOIN market ON symbol.id_mkt = market.id_mkt`;
 
 router.get("/", (req: Request, res: Response) => {
-  mysqlConnection.query(queryGET, (err: Error, rows: Operation[]) => {
-    if (!err) {
-      const operations: Operation[] = rows.map(mapRowToOperation);
-      res.json(operations);
-    } else console.log(err);
-  });
+  const orderListByDate = "ORDER BY operation.time_op DESC";
+  mysqlConnection.query(
+    queryGET + " " + orderListByDate,
+    (err: Error, rows: Operation[]) => {
+      if (!err) {
+        const operations: Operation[] = rows.map(mapRowToOperation);
+        res.json(operations);
+      } else console.log(err);
+    }
+  );
 });
 
 router.get("/:id", (req: Request, res: Response) => {

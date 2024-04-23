@@ -39,12 +39,16 @@ JOIN status ON projection.id_st = status.id_st
 JOIN market ON symbol.id_mkt = market.id_mkt`;
 
 router.get("/", (req: Request, res: Response) => {
-  mysqlConnection.query(queryGET, (err: Error, rows: Projection[]) => {
-    if (!err) {
-      const projections: Projection[] = rows.map(mapRowToProjection);
-      res.json(projections);
-    } else console.log(err);
-  });
+  const orderListByDate = "ORDER BY projection.date_proj DESC";
+  mysqlConnection.query(
+    queryGET + " " + orderListByDate,
+    (err: Error, rows: Projection[]) => {
+      if (!err) {
+        const projections: Projection[] = rows.map(mapRowToProjection);
+        res.json(projections);
+      } else console.log(err);
+    }
+  );
 });
 
 router.get("/:id", (req: Request, res: Response) => {
