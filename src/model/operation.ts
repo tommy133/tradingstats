@@ -1,5 +1,4 @@
 import { Account } from "./account";
-import { Market } from "./market";
 import { Status } from "./status";
 import { Symbol } from "./symbol";
 
@@ -15,6 +14,5 @@ export interface Operation {
   account: Account;
   volume?: number;
   ratio?: number;
-  market: Market;
   revenue?: number;
 }

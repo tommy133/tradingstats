@@ -5,23 +5,20 @@ import { Symbol } from "../model/symbol";
 
 const router: Router = express.Router();
 
+const queryGET = `SELECT symbol.id_sym, symbol.name_sym, symbol.description, 
+symbol.id_mkt, market.name_mkt FROM symbol JOIN market ON symbol.id_mkt = market.id_mkt`;
+
 router.get("/", (req: Request, res: Response) => {
-  mysqlConnection.query(
-    `SELECT symbol.id_sym, symbol.name_sym, symbol.description FROM 
-    symbol `,
-    (err: Error, rows: any, fields: any) => {
-      const symbols: Symbol = rows;
-      if (!err) res.send(symbols);
-      else console.log(err);
-    }
-  );
+  mysqlConnection.query(queryGET, (err: Error, rows: any, fields: any) => {
+    const symbols: Symbol = rows;
+    if (!err) res.send(symbols);
+    else console.log(err);
+  });
 });
 
 router.get("/:id", (req: Request, res: Response) => {
   mysqlConnection.query(
-    `SELECT symbol.id_sym, symbol.name_sym, symbol.description FROM 
-    symbol
-    WHERE id_sym = ?`,
+    queryGET + ` WHERE id_sym = ?`,
     [req.params.id],
     (err: QueryError | null, result: any) => {
       const symbol = result[0];

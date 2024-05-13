@@ -10,5 +10,4 @@ export interface Projection {
   graph?: string;
   timeframe: string;
   status: Status;
-  market: Market;
 }

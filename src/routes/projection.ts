@@ -13,7 +13,7 @@ const mapRowToProjection = (row: any): Projection => {
     symbol: {
       id_sym: row.id_sym,
       name_sym: row.name_sym,
-      name_mkt: row.name_mkt,
+      market: { id_mkt: row.id_mkt, name_mkt: row.name_mkt },
     },
     updown: row.updown,
     date: row.date_proj,
@@ -22,10 +22,6 @@ const mapRowToProjection = (row: any): Projection => {
     status: {
       id_st: row.id_st,
       name_st: row.name_st,
-    },
-    market: {
-      id_mkt: row.id_mkt,
-      name_mkt: row.name_mkt,
     },
   };
 };

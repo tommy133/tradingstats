@@ -13,7 +13,7 @@ const mapRowToOperation = (row: any): Operation => {
     symbol: {
       id_sym: row.id_sym,
       name_sym: row.name_sym,
-      name_mkt: row.name_mkt,
+      market: { id_mkt: row.id_mkt, name_mkt: row.name_mkt },
     },
     updown: row.updown,
     dateOpen: row.time_op,
@@ -27,10 +27,6 @@ const mapRowToOperation = (row: any): Operation => {
     account: {
       id_ac: row.id_ac,
       account_type: row.account_type,
-    },
-    market: {
-      id_mkt: row.id_mkt,
-      name_mkt: row.name_mkt,
     },
     volume: row.volume,
     ratio: row.rr_ratio,
