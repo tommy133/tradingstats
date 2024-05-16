@@ -1,16 +1,28 @@
 import express, { Request, Response, Router } from "express";
-import mysqlConnection from "./../config/db";
 import { QueryError } from "mysql2";
 import { Symbol } from "../model/symbol";
+import mysqlConnection from "./../config/db";
 
 const router: Router = express.Router();
+
+const mapRowToSymbol = (row: any): Symbol => {
+  return {
+    id_sym: row.id_sym,
+    name_sym: row.name_sym,
+    market: {
+      id_mkt: row.id_mkt,
+      name_mkt: row.name_mkt,
+    },
+    description: row.description,
+  };
+};
 
 const queryGET = `SELECT symbol.id_sym, symbol.name_sym, symbol.description, 
 symbol.id_mkt, market.name_mkt FROM symbol JOIN market ON symbol.id_mkt = market.id_mkt`;
 
 router.get("/", (req: Request, res: Response) => {
   mysqlConnection.query(queryGET, (err: Error, rows: any, fields: any) => {
-    const symbols: Symbol = rows;
+    const symbols = rows.map(mapRowToSymbol);
     if (!err) res.send(symbols);
     else console.log(err);
   });
@@ -21,8 +33,8 @@ router.get("/:id", (req: Request, res: Response) => {
     queryGET + ` WHERE id_sym = ?`,
     [req.params.id],
     (err: QueryError | null, result: any) => {
-      const symbol = result[0];
-      if (!err) res.send(symbol);
+      const symbols = result.map(mapRowToSymbol);
+      if (!err) res.send(symbols[0]);
       else console.log(err);
     }
   );
