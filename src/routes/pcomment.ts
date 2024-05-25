@@ -1,6 +1,6 @@
 import express, { Request, Response, Router } from "express";
-import mysqlConnection from "./../config/db";
 import { QueryError } from "mysql2";
+import mysqlConnection from "./../config/db";
 
 const router: Router = express.Router();
 
@@ -8,6 +8,7 @@ export interface ProjectionComment {
   id_pc: number;
   pcomment: string;
   id_proj: number;
+  inserted_at: string;
 }
 
 router.get("/", (req: Request, res: Response) => {
@@ -23,12 +24,12 @@ router.get("/", (req: Request, res: Response) => {
 router.get("/:id", (req: Request, res: Response) => {
   mysqlConnection.query(
     `SELECT * FROM pcomment
-    WHERE id_proj = ?`,
+    WHERE id_proj = ? ORDER BY pcomment.inserted_at DESC`,
     [req.params.id],
     (err: QueryError | null, results: any, fields: any) => {
       if (!err) {
         const rows: ProjectionComment[] = results;
-        res.json(rows[0]);
+        res.json(rows);
       } else console.log(err);
     }
   );
