@@ -6,7 +6,7 @@ const router: Router = express.Router();
 
 export interface ProjectionComment {
   id_pc: number;
-  pcomment: string;
+  comment: string;
   id_proj: number;
   inserted_at: string;
 }
@@ -36,11 +36,11 @@ router.get("/:id", (req: Request, res: Response) => {
 });
 
 router.post("/", (req: Request, res: Response) => {
-  const { pcomment, id_proj } = req.body;
-  const sql = "INSERT INTO pcomment (pcomment, id_proj) VALUES (?, ?)";
+  const { comment, id_proj } = req.body;
+  const sql = "INSERT INTO pcomment (comment, id_proj) VALUES (?, ?)";
   mysqlConnection.query(
     sql,
-    [pcomment, id_proj],
+    [comment, id_proj],
     (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
@@ -53,12 +53,12 @@ router.post("/", (req: Request, res: Response) => {
 });
 
 router.put("/:id", (req: Request, res: Response) => {
-  const { pcomment } = req.body;
+  const { comment } = req.body;
   const id = req.params.id;
-  const sql = `UPDATE pcomment SET pcomment=? WHERE id_pc = ?`;
+  const sql = `UPDATE pcomment SET comment=? WHERE id_pc = ?`;
   mysqlConnection.query(
     sql,
-    [pcomment, id],
+    [comment, id],
     (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);

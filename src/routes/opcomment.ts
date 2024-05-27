@@ -6,7 +6,7 @@ const router: Router = express.Router();
 
 export interface OperationComment {
   id_opc: number;
-  opcomment: string;
+  comment: string;
   id_op: number;
   inserted_at: string;
 }
@@ -36,11 +36,11 @@ router.get("/:id", (req: Request, res: Response) => {
 });
 
 router.post("/", (req: Request, res: Response) => {
-  const { opcomment, id_op } = req.body;
-  const sql = "INSERT INTO opcomment (opcomment, id_op) VALUES (?, ?)";
+  const { comment, id_op } = req.body;
+  const sql = "INSERT INTO opcomment (comment, id_op) VALUES (?, ?)";
   mysqlConnection.query(
     sql,
-    [opcomment, id_op],
+    [comment, id_op],
     (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
@@ -53,12 +53,12 @@ router.post("/", (req: Request, res: Response) => {
 });
 
 router.put("/:id", (req: Request, res: Response) => {
-  const { opcomment } = req.body;
+  const { comment } = req.body;
   const id = req.params.id;
-  const sql = `UPDATE opcomment SET opcomment=? WHERE id_opc = ?`;
+  const sql = `UPDATE opcomment SET comment=? WHERE id_opc = ?`;
   mysqlConnection.query(
     sql,
-    [opcomment, id],
+    [comment, id],
     (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
