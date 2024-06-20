@@ -1,8 +1,8 @@
 import express, { Request, Response, Router } from "express";
-import mysqlConnection from "./../config/db";
+import { QueryError } from "mysql2";
 import { Projection } from "../model/projection";
 import { convertDatesToLocalTime } from "../utils/shared-utils";
-import { QueryError } from "mysql2";
+import mysqlConnection from "./../config/db";
 import { ProjectionComment } from "./pcomment";
 
 const router: Router = express.Router();
@@ -82,7 +82,7 @@ router.post("/", (req: Request, res: Response) => {
 router.put("/:id", (req: Request, res: Response) => {
   const { updown, date_proj, graph, id_sym, name_tf, id_st } = req.body;
   const id = req.params.id;
-  const sql = `UPDATE projection SET updown = IFNULL(?, updown), date_proj = IFNULL(?, date_proj), 
+  const sql = `UPDATE projection SET updown = ?, date_proj = IFNULL(?, date_proj), 
     graph = IFNULL(?, graph), id_sym = IFNULL(?, id_sym), name_tf = IFNULL(?, name_tf)
     , id_st = IFNULL(?, id_st) WHERE id_proj = ?`;
   mysqlConnection.query(
