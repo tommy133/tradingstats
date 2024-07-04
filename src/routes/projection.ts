@@ -103,36 +103,57 @@ router.put("/:id", (req: Request, res: Response) => {
 
 router.delete("/:id", (req: Request, res: Response) => {
   const projectionId = req.params.id;
-  // Check if there are comments associated with the projection
-  const checkCommentsSql = "SELECT * FROM pcomment WHERE id_proj = ?";
-  mysqlConnection.query(
-    checkCommentsSql,
-    [projectionId],
-    (err: QueryError | null, result: any) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send("Error checking associated comments");
-        return;
-      }
 
-      const comments: ProjectionComment[] = result;
-      // If there are comments associated, delete them first
-      if (comments.length > 0) {
-        const deleteCommentSql = "DELETE FROM pcomment WHERE id_proj = ?";
-        mysqlConnection.query(
-          deleteCommentSql,
-          [projectionId],
-          (err: QueryError | null) => {
-            if (err) {
-              console.log(err);
-              res.status(500).send("Error deleting projection comment record");
-            }
-          }
-        );
-      }
-      deleteProjection(projectionId, res);
+  // Start a transaction
+  mysqlConnection.beginTransaction((err: QueryError | null) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("Error starting transaction");
+      return;
     }
-  );
+
+    // Check if there are comments associated with the projection
+    const checkCommentsSql = "SELECT * FROM pcomment WHERE id_proj = ?";
+    mysqlConnection.query(
+      checkCommentsSql,
+      [projectionId],
+      (err: QueryError | null, result: any) => {
+        if (err) {
+          console.log(err);
+          return mysqlConnection.rollback(() => {
+            res.status(500).send("Error checking associated comments");
+          });
+        }
+
+        const comments: ProjectionComment[] = result;
+
+        // If there are comments associated, delete them first
+        if (comments.length > 0) {
+          const deleteCommentSql = "DELETE FROM pcomment WHERE id_proj = ?";
+          mysqlConnection.query(
+            deleteCommentSql,
+            [projectionId],
+            (err: QueryError | null) => {
+              if (err) {
+                console.log(err);
+                return mysqlConnection.rollback(() => {
+                  res
+                    .status(500)
+                    .send("Error deleting projection comment record");
+                });
+              }
+
+              // After deleting comments, proceed to delete the projection
+              deleteProjection(projectionId, res);
+            }
+          );
+        } else {
+          // If no comments, proceed to delete the projection directly
+          deleteProjection(projectionId, res);
+        }
+      }
+    );
+  });
 });
 
 function deleteProjection(projectionId: string, res: Response) {
@@ -143,14 +164,28 @@ function deleteProjection(projectionId: string, res: Response) {
     (err: QueryError | null, projectionResult: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send("Error deleting projection record");
-      } else {
-        if (projectionResult.affectedRows === 0) {
-          res.status(404).send("Projection record not found");
-        } else {
-          res.send(`${projectionId}`);
-        }
+        return mysqlConnection.rollback(() => {
+          res.status(500).send("Error deleting projection record");
+        });
       }
+
+      if (projectionResult.affectedRows === 0) {
+        return mysqlConnection.rollback(() => {
+          res.status(404).send("Projection record not found");
+        });
+      }
+
+      // Commit the transaction if everything succeeded
+      mysqlConnection.commit((err: QueryError | null) => {
+        if (err) {
+          console.log(err);
+          return mysqlConnection.rollback(() => {
+            res.status(500).send("Error committing transaction");
+          });
+        }
+
+        res.send(`${projectionId}`);
+      });
     }
   );
 }

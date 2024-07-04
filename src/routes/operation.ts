@@ -1,8 +1,8 @@
 import express, { Request, Response, Router } from "express";
-import mysqlConnection from "./../config/db";
+import { QueryError } from "mysql2";
 import { Operation } from "../model/operation";
 import { convertDatesToLocalTime } from "../utils/shared-utils";
-import { QueryError } from "mysql2";
+import mysqlConnection from "./../config/db";
 import { OperationComment } from "./opcomment";
 
 const router: Router = express.Router();
@@ -53,10 +53,10 @@ router.get("/", (req: Request, res: Response) => {
   );
 });
 
-router.get("/:id", (req: Request, res: Response) => {
+router.get("/:opId", (req: Request, res: Response) => {
   mysqlConnection.query(
     queryGET + ` WHERE id_op = ?`,
-    [req.params.id],
+    [req.params.opId],
     (err: QueryError | null, result: any) => {
       if (!err) {
         const operations: Operation[] = result.map(mapRowToOperation);
@@ -67,6 +67,7 @@ router.get("/:id", (req: Request, res: Response) => {
   );
 });
 
+//add operation
 router.post("/", (req: Request, res: Response) => {
   const {
     id_sym,
@@ -109,7 +110,8 @@ router.post("/", (req: Request, res: Response) => {
   );
 });
 
-router.put("/:id", (req: Request, res: Response) => {
+//add operation from given projection and relate them
+router.post("/addFromProj/:projId", (req: Request, res: Response) => {
   const {
     id_sym,
     updown,
@@ -123,7 +125,98 @@ router.put("/:id", (req: Request, res: Response) => {
     rr_ratio,
     revenue,
   } = req.body;
-  const id = req.params.id;
+  const projId = req.params.projId;
+
+  // Start a transaction
+  mysqlConnection.beginTransaction((err: QueryError | null) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("Error starting transaction");
+      return;
+    }
+
+    const insertOperationSql =
+      "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    mysqlConnection.query(
+      insertOperationSql,
+      [
+        id_sym,
+        updown,
+        time_op,
+        time_close,
+        graph,
+        name_tf,
+        id_st,
+        id_ac,
+        volume,
+        rr_ratio,
+        revenue,
+      ],
+      (err: QueryError | null, result: any) => {
+        if (err) {
+          console.log(err);
+          return mysqlConnection.rollback(() => {
+            res.status(500).send("Error inserting operation record");
+          });
+        }
+
+        const opId = result.insertId;
+        if (opId) {
+          const insertRelationSql =
+            "INSERT INTO r_projection_operation (id_proj, id_op) VALUES (?, ?)";
+          mysqlConnection.query(
+            insertRelationSql,
+            [projId, opId],
+            (err: QueryError | null, relationResult: any) => {
+              if (err) {
+                console.log(err);
+                return mysqlConnection.rollback(() => {
+                  res
+                    .status(500)
+                    .send(
+                      "Error inserting projection-operation relation record"
+                    );
+                });
+              }
+
+              // Commit the transaction if everything succeeded
+              mysqlConnection.commit((err: QueryError | null) => {
+                if (err) {
+                  console.log(err);
+                  return mysqlConnection.rollback(() => {
+                    res.status(500).send("Error committing transaction");
+                  });
+                }
+
+                res.send(`${opId}`);
+              });
+            }
+          );
+        } else {
+          mysqlConnection.rollback(() => {
+            res.status(500).send("Error retrieving operation ID");
+          });
+        }
+      }
+    );
+  });
+});
+
+router.put("/:opId", (req: Request, res: Response) => {
+  const {
+    id_sym,
+    updown,
+    time_op,
+    time_close,
+    graph,
+    name_tf,
+    id_st,
+    id_ac,
+    volume,
+    rr_ratio,
+    revenue,
+  } = req.body;
+  const id = req.params.opId;
   const sql = `UPDATE operation SET id_sym = IFNULL(?, id_sym), updown = IFNULL(?, updown), time_op = IFNULL(?, time_op),
     time_close = IFNULL(?, time_close), graph = IFNULL(?, graph), name_tf = IFNULL(?, name_tf), 
     id_st = IFNULL(?, id_st), id_ac = IFNULL(?, id_ac), volume = IFNULL(?, volume), rr_ratio = IFNULL(?, rr_ratio)
@@ -157,37 +250,59 @@ router.put("/:id", (req: Request, res: Response) => {
   );
 });
 
-router.delete("/:id", (req: Request, res: Response) => {
-  const operationId = req.params.id;
-  // Check if there are comments associated with the operation
-  const checkCommentsSql = "SELECT * FROM opcomment WHERE id_op = ?";
-  mysqlConnection.query(
-    checkCommentsSql,
-    [operationId],
-    (err: QueryError | null, result: any) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send("Error checking associated comments");
-        return;
-      }
-      const comments: OperationComment[] = result;
-      // If there are comments associated, delete them first
-      if (comments.length > 0) {
-        const deleteCommentSql = "DELETE FROM opcomment WHERE id_op = ?";
-        mysqlConnection.query(
-          deleteCommentSql,
-          [operationId],
-          (err: QueryError | null, commentResult: any) => {
-            if (err) {
-              console.log(err);
-              res.status(500).send("Error deleting operation comment record");
-            }
-          }
-        );
-      }
-      deleteOperation(operationId, res);
+router.delete("/:opId", (req: Request, res: Response) => {
+  const operationId = req.params.opId;
+
+  // Start a transaction
+  mysqlConnection.beginTransaction((err: QueryError | null) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("Error starting transaction");
+      return;
     }
-  );
+
+    // Check if there are comments associated with the operation
+    const checkCommentsSql = "SELECT * FROM opcomment WHERE id_op = ?";
+    mysqlConnection.query(
+      checkCommentsSql,
+      [operationId],
+      (err: QueryError | null, result: any) => {
+        if (err) {
+          console.log(err);
+          return mysqlConnection.rollback(() => {
+            res.status(500).send("Error checking associated comments");
+          });
+        }
+
+        const comments: OperationComment[] = result;
+
+        // If there are comments associated, delete them first
+        if (comments.length > 0) {
+          const deleteCommentSql = "DELETE FROM opcomment WHERE id_op = ?";
+          mysqlConnection.query(
+            deleteCommentSql,
+            [operationId],
+            (err: QueryError | null, commentResult: any) => {
+              if (err) {
+                console.log(err);
+                return mysqlConnection.rollback(() => {
+                  res
+                    .status(500)
+                    .send("Error deleting operation comment record");
+                });
+              }
+
+              // After deleting comments, proceed to delete the operation
+              deleteOperation(operationId, res);
+            }
+          );
+        } else {
+          // If no comments, proceed to delete the operation directly
+          deleteOperation(operationId, res);
+        }
+      }
+    );
+  });
 });
 
 function deleteOperation(operationId: string, res: Response) {
@@ -198,14 +313,28 @@ function deleteOperation(operationId: string, res: Response) {
     (err: QueryError | null, operationResult: any) => {
       if (err) {
         console.log(err);
-        res.status(500).send("Error deleting operation record");
-      } else {
-        if (operationResult.affectedRows === 0) {
-          res.status(404).send("Operation record not found");
-        } else {
-          res.send(`${operationId}`);
-        }
+        return mysqlConnection.rollback(() => {
+          res.status(500).send("Error deleting operation record");
+        });
       }
+
+      if (operationResult.affectedRows === 0) {
+        return mysqlConnection.rollback(() => {
+          res.status(404).send("Operation record not found");
+        });
+      }
+
+      // Commit the transaction if everything succeeded
+      mysqlConnection.commit((err: QueryError | null) => {
+        if (err) {
+          console.log(err);
+          return mysqlConnection.rollback(() => {
+            res.status(500).send("Error committing transaction");
+          });
+        }
+
+        res.send(`${operationId}`);
+      });
     }
   );
 }
