@@ -67,6 +67,21 @@ router.get("/:opId", (req: Request, res: Response) => {
   );
 });
 
+//Get operation related with given projection
+router.get("/projectionAssoc/:projId", (req: Request, res: Response) => {
+  mysqlConnection.query(
+    "SELECT * FROM `r_projection_operation` JOIN operation ON r_projection_operation.id_op = operation.id_op WHERE id_proj = ?",
+    [req.params.projId],
+    (err: QueryError | null, result: any) => {
+      if (!err) {
+        const operations: Operation[] = result.map(mapRowToOperation);
+        convertDatesToLocalTime(operations);
+        res.json(operations[0]);
+      } else console.log(err);
+    }
+  );
+});
+
 //add operation
 router.post("/", (req: Request, res: Response) => {
   const {
@@ -261,49 +276,85 @@ router.delete("/:opId", (req: Request, res: Response) => {
       return;
     }
 
-    // Check if there are comments associated with the operation
-    const checkCommentsSql = "SELECT * FROM opcomment WHERE id_op = ?";
+    // Check if there is a relation with a projection
+    const checkProjectionSql =
+      "SELECT * FROM r_projection_operation WHERE id_op = ?";
     mysqlConnection.query(
-      checkCommentsSql,
+      checkProjectionSql,
       [operationId],
-      (err: QueryError | null, result: any) => {
+      (err: QueryError | null, relationResult: any) => {
         if (err) {
           console.log(err);
           return mysqlConnection.rollback(() => {
-            res.status(500).send("Error checking associated comments");
+            res.status(500).send("Error checking projection association");
           });
         }
 
-        const comments: OperationComment[] = result;
-
-        // If there are comments associated, delete them first
-        if (comments.length > 0) {
-          const deleteCommentSql = "DELETE FROM opcomment WHERE id_op = ?";
+        if (relationResult.length > 0) {
+          // There is a relation with a projection, delete it first
+          const deleteProjectionRelationSql =
+            "DELETE FROM r_projection_operation WHERE id_op = ?";
           mysqlConnection.query(
-            deleteCommentSql,
+            deleteProjectionRelationSql,
             [operationId],
-            (err: QueryError | null, commentResult: any) => {
+            (err: QueryError | null) => {
               if (err) {
                 console.log(err);
                 return mysqlConnection.rollback(() => {
                   res
                     .status(500)
-                    .send("Error deleting operation comment record");
+                    .send(
+                      "Error deleting projection-operation relation record"
+                    );
                 });
               }
-
-              // After deleting comments, proceed to delete the operation
-              deleteOperation(operationId, res);
             }
           );
-        } else {
-          // If no comments, proceed to delete the operation directly
-          deleteOperation(operationId, res);
         }
+        //once deleted relation if there are, delete comments and operation
+        checkCommentsAndDeleteOperation(operationId, res);
       }
     );
   });
 });
+
+//can't atomize this function
+function checkCommentsAndDeleteOperation(operationId: string, res: Response) {
+  const checkCommentsSql = "SELECT * FROM opcomment WHERE id_op = ?";
+  mysqlConnection.query(
+    checkCommentsSql,
+    [operationId],
+    (err: QueryError | null, result: any) => {
+      if (err) {
+        console.log(err);
+        return mysqlConnection.rollback(() => {
+          res.status(500).send("Error checking associated comments");
+        });
+      }
+
+      const comments: OperationComment[] = result;
+
+      // If there are comments associated, delete them first
+      if (comments.length > 0) {
+        const deleteCommentSql = "DELETE FROM opcomment WHERE id_op = ?";
+        mysqlConnection.query(
+          deleteCommentSql,
+          [operationId],
+          (err: QueryError | null, commentResult: any) => {
+            if (err) {
+              console.log(err);
+              return mysqlConnection.rollback(() => {
+                res.status(500).send("Error deleting operation comment record");
+              });
+            }
+          }
+        );
+      }
+      //once deleted comments if there are, delete operation
+      deleteOperation(operationId, res);
+    }
+  );
+}
 
 function deleteOperation(operationId: string, res: Response) {
   const deleteOperationSql = "DELETE FROM operation WHERE id_op = ?";

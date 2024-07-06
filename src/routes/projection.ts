@@ -61,6 +61,20 @@ router.get("/:id", (req: Request, res: Response) => {
   );
 });
 
+router.get("/operationAssoc/:opId", (req: Request, res: Response) => {
+  mysqlConnection.query(
+    "SELECT * FROM `r_projection_operation` JOIN projection ON r_projection_operation.id_proj = projection.id_proj WHERE id_op = ?",
+    [req.params.opId],
+    (err: QueryError | null, result: any) => {
+      if (!err) {
+        const projections: Projection[] = result.map(mapRowToProjection);
+        convertDatesToLocalTime(projections);
+        res.json(projections[0]);
+      } else console.log(err);
+    }
+  );
+});
+
 router.post("/", (req: Request, res: Response) => {
   const { id_sym, updown, date_proj, graph, name_tf, id_st } = req.body;
   const sql =
@@ -112,26 +126,26 @@ router.delete("/:id", (req: Request, res: Response) => {
       return;
     }
 
-    // Check if there are comments associated with the projection
-    const checkCommentsSql = "SELECT * FROM pcomment WHERE id_proj = ?";
+    // Check if there is a relation with an operation
+    const checkOperationSql =
+      "SELECT * FROM r_projection_operation WHERE id_proj = ?";
     mysqlConnection.query(
-      checkCommentsSql,
+      checkOperationSql,
       [projectionId],
-      (err: QueryError | null, result: any) => {
+      (err: QueryError | null, relationResult: any) => {
         if (err) {
           console.log(err);
           return mysqlConnection.rollback(() => {
-            res.status(500).send("Error checking associated comments");
+            res.status(500).send("Error checking operation association");
           });
         }
 
-        const comments: ProjectionComment[] = result;
-
-        // If there are comments associated, delete them first
-        if (comments.length > 0) {
-          const deleteCommentSql = "DELETE FROM pcomment WHERE id_proj = ?";
+        if (relationResult.length > 0) {
+          // There is a relation with an operation, delete it first
+          const deleteOperationRelationSql =
+            "DELETE FROM r_projection_operation WHERE id_proj = ?";
           mysqlConnection.query(
-            deleteCommentSql,
+            deleteOperationRelationSql,
             [projectionId],
             (err: QueryError | null) => {
               if (err) {
@@ -139,22 +153,59 @@ router.delete("/:id", (req: Request, res: Response) => {
                 return mysqlConnection.rollback(() => {
                   res
                     .status(500)
-                    .send("Error deleting projection comment record");
+                    .send(
+                      "Error deleting projection-operation relation record"
+                    );
                 });
               }
-
-              // After deleting comments, proceed to delete the projection
-              deleteProjection(projectionId, res);
             }
           );
-        } else {
-          // If no comments, proceed to delete the projection directly
-          deleteProjection(projectionId, res);
         }
+        //once deleted relation if there are, delete comments and projection
+        checkCommentsAndDeleteProjection(projectionId, res);
       }
     );
   });
 });
+
+//can't atomize this function
+function checkCommentsAndDeleteProjection(projectionId: string, res: Response) {
+  const checkCommentsSql = "SELECT * FROM pcomment WHERE id_proj = ?";
+  mysqlConnection.query(
+    checkCommentsSql,
+    [projectionId],
+    (err: QueryError | null, result: any) => {
+      if (err) {
+        console.log(err);
+        return mysqlConnection.rollback(() => {
+          res.status(500).send("Error checking associated comments");
+        });
+      }
+
+      const comments: ProjectionComment[] = result;
+
+      // If there are comments associated, delete them first
+      if (comments.length > 0) {
+        const deleteCommentSql = "DELETE FROM pcomment WHERE id_proj = ?";
+        mysqlConnection.query(
+          deleteCommentSql,
+          [projectionId],
+          (err: QueryError | null) => {
+            if (err) {
+              console.log(err);
+              return mysqlConnection.rollback(() => {
+                res
+                  .status(500)
+                  .send("Error deleting projection comment record");
+              });
+            }
+          }
+        );
+      }
+      deleteProjection(projectionId, res);
+    }
+  );
+}
 
 function deleteProjection(projectionId: string, res: Response) {
   const deleteProjectionSql = "DELETE FROM projection WHERE id_proj = ?";
