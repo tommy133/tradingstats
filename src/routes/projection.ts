@@ -51,7 +51,10 @@ router.get("/", (req: Request, res: Response) => {
 router.get("/pull", (req: any, res: any) => {
   const id = req.query.id;
   const updatedAtUnix = parseFloat(req.query.updatedAt);
+
   const batchSize = parseInt(req.query.batchSize, 10);
+  console.log(batchSize);
+
   const updatedAtParsed = new Date(updatedAtUnix).toISOString();
   /**
    * Notice that we have to compare the updatedAt AND the id field
@@ -60,8 +63,8 @@ router.get("/pull", (req: any, res: any) => {
    */
 
   mysqlConnection.query(
-    `SELECT * FROM projection WHERE (updated_at > ? OR (updated_at = ? AND id_proj > ?)) ORDER BY updated_at, id_proj LIMIT ?`,
-    [updatedAtParsed, updatedAtParsed, id, batchSize],
+    `SELECT * FROM projection WHERE (updated_at > ? OR (updated_at = ? AND id_proj > ?)) ORDER BY updated_at, id_proj LIMIT 10`,
+    [updatedAtParsed, updatedAtParsed, id],
     (err: QueryError | null, rows: any[], fields: any) => {
       if (!err) {
         const documents = rows;
