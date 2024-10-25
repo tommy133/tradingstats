@@ -1,0 +1,16 @@
+{
+  "development": {
+    "username": "root",
+    "password": null,
+    "database": "db_tstats",
+    "host": "localhost",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "mysql_user",
+    "password": "mysql_password",
+    "database": "db_tstats",
+    "host": "172.18.0.2",
+    "dialect": "mysql"
+  }
+}
