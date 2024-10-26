@@ -28,7 +28,7 @@ const mapRowToOperation = (row: any): Operation => {
       id_ac: row.id_ac,
       account_type: row.account_type,
     },
-    volume: row.volume,
+    checklist: JSON.parse(row.checklist),
     ratio: row.rr_ratio,
     revenue: row.revenue,
   };
@@ -36,7 +36,7 @@ const mapRowToOperation = (row: any): Operation => {
 
 const queryGET = `SELECT operation.id_op, symbol.id_sym, symbol.name_sym, symbol.id_mkt, operation.updown, 
 operation.time_op, operation.time_close, operation.name_tf, operation.graph, status.id_st, market.id_mkt, market.name_mkt, 
-status.name_st, account.id_ac, account.account_type, operation.volume, operation.rr_ratio, operation.revenue
+status.name_st, account.id_ac, account.account_type, operation.checklist, operation.rr_ratio, operation.revenue
 FROM operation JOIN symbol ON operation.id_sym = symbol.id_sym JOIN status ON operation.id_st = status.id_st 
 JOIN account ON operation.id_ac = account.id_ac JOIN market ON symbol.id_mkt = market.id_mkt`;
 
@@ -93,12 +93,15 @@ router.post("/", (req: Request, res: Response) => {
     name_tf,
     id_st,
     id_ac,
-    volume,
+    checklist,
     rr_ratio,
     revenue,
   } = req.body;
+
+  const checklistJSON = JSON.stringify(checklist);
   const sql =
-    "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, checklist, rr_ratio, revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
   mysqlConnection.query(
     sql,
     [
@@ -110,7 +113,7 @@ router.post("/", (req: Request, res: Response) => {
       name_tf,
       id_st,
       id_ac,
-      volume,
+      checklistJSON,
       rr_ratio,
       revenue,
     ],
@@ -136,7 +139,6 @@ router.post("/addFromProj/:projId", (req: Request, res: Response) => {
     name_tf,
     id_st,
     id_ac,
-    volume,
     rr_ratio,
     revenue,
   } = req.body;
@@ -151,7 +153,7 @@ router.post("/addFromProj/:projId", (req: Request, res: Response) => {
     }
 
     const insertOperationSql =
-      "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, volume, rr_ratio, revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, rr_ratio, revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     mysqlConnection.query(
       insertOperationSql,
       [
@@ -163,7 +165,6 @@ router.post("/addFromProj/:projId", (req: Request, res: Response) => {
         name_tf,
         id_st,
         id_ac,
-        volume,
         rr_ratio,
         revenue,
       ],
@@ -227,14 +228,13 @@ router.put("/:opId", (req: Request, res: Response) => {
     name_tf,
     id_st,
     id_ac,
-    volume,
     rr_ratio,
     revenue,
   } = req.body;
   const id = req.params.opId;
   const sql = `UPDATE operation SET id_sym = IFNULL(?, id_sym), updown = IFNULL(?, updown), time_op = IFNULL(?, time_op),
     time_close = IFNULL(?, time_close), graph = IFNULL(?, graph), name_tf = IFNULL(?, name_tf), 
-    id_st = IFNULL(?, id_st), id_ac = IFNULL(?, id_ac), volume = IFNULL(?, volume), rr_ratio = IFNULL(?, rr_ratio)
+    id_st = IFNULL(?, id_st), id_ac = IFNULL(?, id_ac), rr_ratio = IFNULL(?, rr_ratio)
     , revenue = IFNULL(?, revenue)  WHERE id_op = ?`;
   mysqlConnection.query(
     sql,
@@ -247,7 +247,6 @@ router.put("/:opId", (req: Request, res: Response) => {
       name_tf,
       id_st,
       id_ac,
-      volume,
       rr_ratio,
       revenue,
       id,
