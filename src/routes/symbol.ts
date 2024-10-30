@@ -13,11 +13,12 @@ const mapRowToSymbol = (row: any): Symbol => {
       id_mkt: row.id_mkt,
       name_mkt: row.name_mkt,
     },
+    bt_checkpoint: row.bt_checkpoint,
     description: row.description,
   };
 };
 
-const queryGET = `SELECT symbol.id_sym, symbol.name_sym, symbol.description, 
+const queryGET = `SELECT symbol.id_sym, symbol.name_sym, symbol.bt_checkpoint, symbol.description, 
 symbol.id_mkt, market.name_mkt FROM symbol JOIN market ON symbol.id_mkt = market.id_mkt`;
 
 router.get("/", (req: Request, res: Response) => {
@@ -59,13 +60,13 @@ router.post("/", (req: Request, res: Response) => {
 });
 
 router.put("/:id", (req: Request, res: Response) => {
-  const { name_sym, description, id_mkt } = req.body;
+  const { name_sym, bt_checkpoint, description, id_mkt } = req.body;
   const id = req.params.id;
   const sql =
-    "UPDATE symbol SET name_sym = IFNULL(?, name_sym), description = IFNULL(?, description), id_mkt = IFNULL(?, id_mkt) WHERE id_sym = ?";
+    "UPDATE symbol SET name_sym = IFNULL(?, name_sym), bt_checkpoint = IFNULL(?, bt_checkpoint), description = IFNULL(?, description), id_mkt = IFNULL(?, id_mkt) WHERE id_sym = ?";
   mysqlConnection.query(
     sql,
-    [name_sym, description, id_mkt, id],
+    [name_sym, bt_checkpoint, description, id_mkt, id],
     (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
