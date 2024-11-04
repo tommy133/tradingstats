@@ -8,6 +8,7 @@ export interface ProjectionComment {
   id_pc: number;
   comment: string;
   id_proj: number;
+  parent_id: number;
   inserted_at: string;
 }
 
@@ -36,11 +37,12 @@ router.get("/:id", (req: Request, res: Response) => {
 });
 
 router.post("/", (req: Request, res: Response) => {
-  const { comment, id_proj } = req.body;
-  const sql = "INSERT INTO pcomment (comment, id_proj) VALUES (?, ?)";
+  const { comment, id_proj, parent_id } = req.body;
+  const sql =
+    "INSERT INTO pcomment (comment, id_proj, parent_id) VALUES (?, ?, ?)";
   mysqlConnection.query(
     sql,
-    [comment, id_proj],
+    [comment, id_proj, parent_id],
     (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);

@@ -8,6 +8,7 @@ export interface OperationComment {
   id_opc: number;
   comment: string;
   id_op: number;
+  parent_id: number;
   inserted_at: string;
 }
 
@@ -36,11 +37,12 @@ router.get("/:id", (req: Request, res: Response) => {
 });
 
 router.post("/", (req: Request, res: Response) => {
-  const { comment, id_op } = req.body;
-  const sql = "INSERT INTO opcomment (comment, id_op) VALUES (?, ?)";
+  const { comment, id_op, parent_id } = req.body;
+  const sql =
+    "INSERT INTO opcomment (comment, id_op, parent_id) VALUES (?, ?, ?)";
   mysqlConnection.query(
     sql,
-    [comment, id_op],
+    [comment, id_op, parent_id],
     (err: QueryError | null, result: any) => {
       if (err) {
         console.log(err);
