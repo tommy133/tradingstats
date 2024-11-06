@@ -35,12 +35,15 @@ const mapRowToOperation = (row: any): Operation => {
     checklist: checklist,
     ratio: row.rr_ratio,
     revenue: row.revenue,
+    inserted_at: row.inserted_at,
+    updated_at: row.updated_at,
   };
 };
 
 const queryGET = `SELECT operation.id_op, symbol.id_sym, symbol.name_sym, symbol.id_mkt, operation.updown, 
 operation.time_op, operation.time_close, operation.name_tf, operation.graph, status.id_st, market.id_mkt, market.name_mkt, 
-status.name_st, account.id_ac, account.account_type, operation.checklist, operation.rr_ratio, operation.revenue
+status.name_st, account.id_ac, account.account_type, operation.checklist, operation.rr_ratio, operation.revenue,
+operation.inserted_at, operation.updated_at
 FROM operation JOIN symbol ON operation.id_sym = symbol.id_sym JOIN status ON operation.id_st = status.id_st 
 JOIN account ON operation.id_ac = account.id_ac JOIN market ON symbol.id_mkt = market.id_mkt`;
 
