@@ -47,6 +47,8 @@ operation.inserted_at, operation.updated_at
 FROM operation JOIN symbol ON operation.id_sym = symbol.id_sym JOIN status ON operation.id_st = status.id_st 
 JOIN account ON operation.id_ac = account.id_ac JOIN market ON symbol.id_mkt = market.id_mkt`;
 
+const queryPOST = `INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, checklist, rr_ratio, revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
 router.get("/", (req: Request, res: Response) => {
   const orderListByDate = "ORDER BY operation.time_op DESC";
   mysqlConnection.query(
@@ -106,11 +108,9 @@ router.post("/", (req: Request, res: Response) => {
   } = req.body;
 
   const checklistJSON = JSON.stringify(checklist);
-  const sql =
-    "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, checklist, rr_ratio, revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   mysqlConnection.query(
-    sql,
+    queryPOST,
     [
       id_sym,
       updown,
@@ -146,10 +146,12 @@ router.post("/addFromProj/:projId", (req: Request, res: Response) => {
     name_tf,
     id_st,
     id_ac,
+    checklist,
     rr_ratio,
     revenue,
   } = req.body;
   const projId = req.params.projId;
+  const checklistJSON = JSON.stringify(checklist);
 
   // Start a transaction
   mysqlConnection.beginTransaction((err: QueryError | null) => {
@@ -159,10 +161,8 @@ router.post("/addFromProj/:projId", (req: Request, res: Response) => {
       return;
     }
 
-    const insertOperationSql =
-      "INSERT INTO operation (id_sym, updown, time_op, time_close, graph, name_tf, id_st, id_ac, rr_ratio, revenue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     mysqlConnection.query(
-      insertOperationSql,
+      queryPOST,
       [
         id_sym,
         updown,
@@ -172,6 +172,7 @@ router.post("/addFromProj/:projId", (req: Request, res: Response) => {
         name_tf,
         id_st,
         id_ac,
+        checklistJSON,
         rr_ratio,
         revenue,
       ],
