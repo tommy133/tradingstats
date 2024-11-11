@@ -27,8 +27,7 @@ module.exports = (sequelize) => {
     },
     {
       sequelize,
-      modelName: 'Pcomment',
-      tableName: 'Pcomment',
+      modelName: 'pcomment',
       timestamps: false,
     }
   );
